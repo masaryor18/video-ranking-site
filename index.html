@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>動画ランキングサイト</title>
+  <meta name="description" content="動画ランキング（サンプル） - 18歳以上向け。リンク紹介のみ。" />
+
+  <style>
+    /* 基本スタイル */
+    :root {
+      --bg: #000;
+      --pink: #ff69b4;
+      --panel: #111;
+      --muted: #888;
+    }
+    html,body { height:100%; }
+    body {
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--pink);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    header { text-align:center; padding:1rem; }
+    h1 { margin:0 0 .4rem; font-size:1.4rem; }
+
+    /* タブ */
+    .tabs { display:flex; justify-content:center; gap:1rem; margin-bottom:1rem; }
+    .tab {
+      cursor:pointer;
+      padding:.45rem .9rem;
+      background:#222;
+      border:1px solid var(--pink);
+      user-select:none;
+    }
+    .tab.active { background: var(--pink); color:#000; }
+
+    /* レイアウト */
+    .wrap { max-width:1200px; margin:0 auto; display:flex; gap:1rem; padding:0 1rem; box-sizing:border-box; }
+    .ad-space { width:15%; min-width:80px; background:#0b0b0b; border:1px dashed #2a002a; border-radius:6px; }
+    .content { flex:1 1 auto; width:70%; display:grid; grid-template-columns:1fr; gap:1rem; }
+
+    /* 動画カード */
+    .video { display:flex; gap:1rem; align-items:center; padding:.6rem; border:1px solid var(--pink); background:var(--panel); border-radius:6px; }
+    .video img { width:120px; height:auto; border-radius:4px; flex-shrink:0; cursor:pointer; transition:transform .2s ease; }
+    .video img:hover { transform:scale(1.04); }
+    .video-title { color:var(--pink); font-weight:600; word-break:break-word; }
+    .video-meta { color:#f0a3d1; font-size:.9rem; margin-top:.2rem; }
+
+    /* ページネーション */
+    .pagination { text-align:center; margin:1.25rem 0; }
+    .pagination button {
+      background:var(--pink); color:#000; border:none; padding:.5rem .9rem; margin:0 .4rem; border-radius:6px; cursor:pointer;
+    }
+    .pagination button:disabled { background:#5a003a; cursor:not-allowed; }
+
+    /* フッター */
+    footer { text-align:center; color:var(--muted); padding:2rem 1rem; font-size:.9rem; line-height:1.6; }
+
+    /* ポップアップ広告 */
+    #popup-ad {
+      position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
+      background: #111; border:2px solid var(--pink); padding:1.2rem; display:none; z-index:9999; border-radius:8px;
+      max-width:90%; box-sizing:border-box; color:var(--pink);
+    }
+    #popup-ad button.close-ad { float:right; background:none; border:none; color:var(--pink); font-size:1.2rem; cursor:pointer; }
+
+    /* レスポンシブ */
+    @media (max-width: 900px) {
+      .wrap { flex-direction:column; align-items:center; gap:.8rem; }
+      .ad-space { display:none; }
+      .content { width:100%; }
+      .video img { width:100px; }
+    }
+
+    /* 小さめ表示調整 */
+    @media (max-width: 420px) {
+      .video img { width:92px; }
+      h1 { font-size:1.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>動画ランキング</h1>
+    <div class="tabs" role="tablist" aria-label="表示切替">
+      <div class="tab active" id="tab-popular" role="tab" tabindex="0">人気順</div>
+      <div class="tab" id="tab-latest" role="tab" tabindex="0">最新</div>
+    </div>
+  </header>
+
+  <main class="wrap" aria-live="polite">
+    <aside class="ad-space" aria-hidden="true"><!-- 左広告スペース --></aside>
+
+    <section class="content" id="video-list" aria-label="動画一覧">
+      <!-- 動画カードはここに挿入されます -->
+    </section>
+
+    <aside class="ad-space" aria-hidden="true"><!-- 右広告スペース --></aside>
+  </main>
+
+  <div class="pagination" id="pagination" aria-label="ページネーション">
+    <button id="prev-btn" aria-label="前のページ">前へ</button>
+    <span id="page-number" aria-live="polite" aria-atomic="true">1</span>
+    <button id="next-btn" aria-label="次のページ">次へ</button>
+  </div>
+
+  <footer>
+    <p>
+      当サイトは18歳以上の方を対象としています。<br>
+      当サイトはコンテンツのリンク紹介のみを行っており、動画そのものの保存・配信は行いません。<br>
+      各リンク先の内容・合法性については利用者ご自身でご確認ください。閲覧は自己責任でお願いいたします。
+    </p>
+  </footer>
+
+  <div id="popup-ad" role="dialog" aria-modal="true" aria-hidden="true"></div>
+
+  <!-- Supabase SDK（CDN） -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+
+  <script>
+    /****************************************************************
+     * IMPORTANT:
+     * - Replace SUPABASE_URL and SUPABASE_ANON_KEY with your project's values.
+     * - For production on Vercel: set environment variables and inject at build time,
+     *   or use a small server-side wrapper. Do NOT commit secret keys to public repos.
+     ****************************************************************/
+
+    // ----- Put your Supabase project info here (or replace at build time) -----
+    const SUPABASE_URL = "https://hpampufhtpfkpccuzmli.supabase.co"; // <-- replace
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwYW1wdWZodHBma3BjY3V6bWxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5NjU0MzksImV4cCI6MjA2OTU0MTQzOX0.wr7xYs10fX7ruGLeAYofradM_HR42U1sXSJILrSchNA"; // <-- replace
+    // -------------------------------------------------------------------------
+
+    // Safety: if values not set, fail gracefully
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.includes("your-project-id")) {
+      console.warn("Supabase URL / ANON key not set. Replace SUPABASE_URL and SUPABASE_ANON_KEY in index.html or inject via build.");
+    }
+
+    // create client (global `supabase` is provided by the CDN script)
+    let supabaseClient = null;
+    try {
+      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch (e) {
+      console.error("Supabase client init failed:", e);
+    }
+
+    // UI state
+    let currentTab = "popular"; // "popular" or "latest"
+    let currentPage = 1;
+    const PAGE_SIZE = 10;
+    let cachedVideos = []; // full list for current tab
+
+    // Helper: escape text for safety in attributes (basic)
+    function escapeHTML(s) {
+      if (!s) return "";
+      return String(s).replace(/[&<>"']/g, function (m) {
+        return { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m];
+      });
+    }
+
+    // Fetch videos from Supabase depending on tab
+    async function fetchVideos() {
+      if (!supabaseClient) return [];
+      try {
+        if (currentTab === "popular") {
+          // order by views desc
+          const { data, error } = await supabaseClient
+            .from("videos")
+            .select("id, title, thumbnail_url, link_url, views, created_at")
+            .order("views", { ascending: false })
+            .limit(100); // fetch up to 100 for example
+          if (error) { console.error("fetchVideos error:", error); return []; }
+          return data || [];
+        } else {
+          // latest: order by created_at desc
+          const { data, error } = await supabaseClient
+            .from("videos")
+            .select("id, title, thumbnail_url, link_url, views, created_at")
+            .order("created_at", { ascending: false })
+            .limit(100);
+          if (error) { console.error("fetchVideos error:", error); return []; }
+          return data || [];
+        }
+      } catch (e) {
+        console.error("fetchVideos exception:", e);
+        return [];
+      }
+    }
+
+    // Render current page
+    function render() {
+      const listEl = document.getElementById("video-list");
+      listEl.innerHTML = "";
+
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const pageItems = cachedVideos.slice(start, start + PAGE_SIZE);
+
+      if (pageItems.length === 0) {
+        listEl.innerHTML = `<div style="color:var(--muted); text-align:center; padding:1rem;">表示できる動画がありません。</div>`;
+      } else {
+        for (const v of pageItems) {
+          const thumbnail = v.thumbnail_url && v.thumbnail_url.trim() !== "" ?
+                            v.thumbnail_url : "https://via.placeholder.com/120x90?text=No+Image";
+
+          // build card DOM safely
+          const card = document.createElement("div");
+          card.className = "video";
+
+          const img = document.createElement("img");
+          img.src = thumbnail;
+          img.alt = v.title ? escapeHTML(v.title) : "thumbnail";
+          img.tabIndex = 0;
+          img.addEventListener("click", () => onThumbClick(v.id, v.link_url));
+          img.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") { onThumbClick(v.id, v.link_url); e.preventDefault(); }
+          });
+
+          const meta = document.createElement("div");
+          meta.style.flex = "1 1 auto";
+
+          const title = document.createElement("div");
+          title.className = "video-title";
+          title.textContent = v.title || "無題";
+
+          const views = document.createElement("div");
+          views.className = "video-meta";
+          views.textContent = `${v.views ?? 0} 回再生`;
+
+          meta.appendChild(title);
+          meta.appendChild(views);
+
+          card.appendChild(img);
+          card.appendChild(meta);
+          listEl.appendChild(card);
+        }
+      }
+
+      // update pagination controls
+      document.getElementById("page-number").textContent = currentPage;
+      document.getElementById("prev-btn").disabled = currentPage === 1;
+      document.getElementById("next-btn").disabled = currentPage * PAGE_SIZE >= cachedVideos.length;
+    }
+
+    // On thumbnail click: increment view then open link
+    async function onThumbClick(id, link) {
+      if (!link) return;
+      // optimistic open in new tab to avoid popup blockers: open first, then update views
+      const win = window.open(link, "_blank", "noopener,noreferrer");
+      try {
+        if (!supabaseClient) return;
+        // read current views
+        const { data, error: selectErr } = await supabaseClient
+          .from("videos")
+          .select("views")
+          .eq("id", id)
+          .single();
+        if (selectErr) {
+          console.error("select views error:", selectErr);
+          return;
+        }
+        const newViews = (data.views ?? 0) + 1;
+        const { error: updateErr } = await supabaseClient
+          .from("videos")
+          .update({ views: newViews })
+          .eq("id", id);
+        if (updateErr) console.error("update views error:", updateErr);
+        // optionally refresh cachedVideos (simple approach)
+        const idx = cachedVideos.findIndex(x => x.id === id);
+        if (idx !== -1) cachedVideos[idx].views = newViews;
+        render();
+      } catch (e) {
+        console.error("onThumbClick exception:", e);
+      }
+    }
+
+    // Load and init
+    async function loadAndRender() {
+      if (!supabaseClient) {
+        // no client: show placeholder items or message
+        cachedVideos = [];
+        render();
+        return;
+      }
+      cachedVideos = await fetchVideos();
+      currentPage = 1;
+      render();
+    }
+
+    // Tabs and pagination handlers
+    document.addEventListener("DOMContentLoaded", () => {
+      // tab events
+      document.getElementById("tab-popular").addEventListener("click", async () => {
+        if (currentTab === "popular") return;
+        currentTab = "popular";
+        document.getElementById("tab-popular").classList.add("active");
+        document.getElementById("tab-latest").classList.remove("active");
+        await loadAndRender();
+      });
+      document.getElementById("tab-latest").addEventListener("click", async () => {
+        if (currentTab === "latest") return;
+        currentTab = "latest";
+        document.getElementById("tab-latest").classList.add("active");
+        document.getElementById("tab-popular").classList.remove("active");
+        await loadAndRender();
+      });
+
+      // keyboard accessibility for tabs
+      ["tab-popular","tab-latest"].forEach(id => {
+        const el = document.getElementById(id);
+        el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { el.click(); e.preventDefault(); }});
+      });
+
+      // pagination
+      document.getElementById("prev-btn").addEventListener("click", () => {
+        if (currentPage > 1) { currentPage--; render(); }
+      });
+      document.getElementById("next-btn").addEventListener("click", () => {
+        if (currentPage * PAGE_SIZE < cachedVideos.length) { currentPage++; render(); }
+      });
+
+      // initial load
+      loadAndRender();
+
+      // popup ad show after 3s
+      setTimeout(() => {
+        const popup = document.getElementById("popup-ad");
+        popup.innerHTML = '<button class="close-ad" aria-label="広告を閉じる">×</button><div style="padding-top:.4rem;">広告スペース</div>';
+        popup.style.display = "block";
+        popup.setAttribute("aria-hidden","false");
+        popup.querySelector(".close-ad").addEventListener("click", () => {
+          popup.style.display = "none";
+          popup.setAttribute("aria-hidden","true");
+        });
+      }, 3000);
+    });
+  </script>
+</body>
+</html>
