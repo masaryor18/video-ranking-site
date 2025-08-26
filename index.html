@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>動画ランキングサイト</title>
+  <link rel="icon" href="/favicon.ico" />
+  <!-- CSS（ここにデザインを入れている）-->
+  <style>
+    :root { --bg:#000; --pink:#ff69b4; --panel:#111; --muted:#888; }
+    html,body{height:100%}
+    body{
+      margin:0; font-family: Arial, sans-serif; background:var(--bg); color:var(--pink);
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    }
+    header{ text-align:center; padding:1rem; }
+    h1{ margin:0 0 .4rem; font-size:1.4rem; }
+    .tabs{ display:flex; justify-content:center; gap:1rem; margin-bottom:1rem; }
+    .tab{ cursor:pointer; padding:.45rem .9rem; background:#222; border:1px solid var(--pink); user-select:none; }
+    .tab.active{ background:var(--pink); color:#000; }
+    .wrap{ max-width:1200px; margin:0 auto; display:flex; gap:1rem; padding:0 1rem; box-sizing:border-box; }
+    .ad-space{ width:15%; min-width:80px; background:#0b0b0b; border-radius:6px; }
+    .content{ flex:1 1 auto; width:70%; display:grid; gap:1rem; }
+    .video{ display:flex; gap:1rem; align-items:center; padding:.6rem; border:1px solid var(--pink); background:var(--panel); border-radius:6px; }
+    .video img{ width:120px; height:auto; border-radius:4px; cursor:pointer; transition:transform .2s; }
+    .video img:hover{ transform:scale(1.04); }
+    .video-title{ color:var(--pink); font-weight:600; word-break:break-word; }
+    .pagination{ text-align:center; margin:1.25rem 0; }
+    .pagination button{ background:var(--pink); color:#000; border:none; padding:.5rem .9rem; margin:0 .4rem; border-radius:6px; cursor:pointer; }
+    footer{ text-align:center; color:var(--muted); padding:2rem 1rem; font-size:.9rem; line-height:1.6; }
+    #popup-ad{ position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); background:#111; border:2px solid var(--pink); padding:1.2rem; display:none; z-index:9999; border-radius:8px; max-width:90%; box-sizing:border-box; color:var(--pink); }
+    #popup-ad button.close-ad{ float:right; cursor:pointer; background:none; border:none; color:var(--pink); font-size:1.2rem; line-height:1; padding:0; }
+    @media (max-width:900px){
+      .wrap{ flex-direction:column; align-items:center; }
+      .ad-space{ display:none; }
+      .content{ width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>動画ランキング</h1>
+    <div class="tabs" role="tablist" aria-label="表示切替">
+      <div class="tab active" id="tab-popular">人気順</div>
+      <div class="tab" id="tab-latest">最新</div>
+    </div>
+  </header>
+
+  <main class="wrap" aria-live="polite">
+    <aside class="ad-space" aria-hidden="true"></aside>
+
+    <section class="content" id="video-list" aria-label="動画一覧">
+      <!-- JS がここに差し込む -->
+    </section>
+
+    <aside class="ad-space" aria-hidden="true"></aside>
+  </main>
+
+  <div class="pagination" id="pagination" aria-label="ページネーション">
+    <button id="prev-btn">前へ</button>
+    <span id="page-number" aria-live="polite" aria-atomic="true">1</span>
+    <button id="next-btn">次へ</button>
+  </div>
+
+  <footer>
+    <p>
+      当サイトは18歳以上の方を対象としています。<br/>
+      当サイトはリンク紹介のみを行っており、コンテンツ自体を保存・配信しておりません。<br/>
+      閲覧は自己責任でお願いいたします。
+    </p>
+  </footer>
+
+  <div id="popup-ad" role="dialog" aria-modal="true" aria-hidden="true"></div>
+
+  <!-- Vite はこのスクリプトをモジュールとして読み込みます -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
