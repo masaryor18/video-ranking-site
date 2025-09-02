@@ -96,5 +96,19 @@
 
     loadVideos();
   </script>
+  <script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    const { createClient } = supabase;
+    const supabaseClient = createClient(
+      window.SUPABASE_URL,
+      window.SUPABASE_ANON_KEY
+    );
+
+    const { data, error } = await supabaseClient.from("videos").select("*");
+    console.log("Supabase データ:", data);
+    if (error) console.error("Supabase エラー:", error);
+  });
+</script>
+
 </body>
 </html>
