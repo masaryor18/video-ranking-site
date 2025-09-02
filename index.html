@@ -1,114 +1,173 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>動画ランキングサイト（テスト）</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #f9f9f9;
-      margin: 20px;
-    }
-    h1 {
-      text-align: center;
-    }
-    #video-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 16px;
-      margin-top: 20px;
-    }
-    .video-card {
-      background: #fff;
-      padding: 12px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    .video-card img {
-      max-width: 100%;
-      border-radius: 6px;
-    }
-    .video-card h3 {
-      margin: 8px 0;
-      font-size: 18px;
-    }
-    .video-card p {
-      margin: 4px 0;
-      font-size: 14px;
-      color: #555;
-    }
-    .video-card a {
-      display: inline-block;
-      margin-top: 6px;
-      color: #0066cc;
-      text-decoration: none;
-    }
-  </style>
-</head>
-<body>
-  <h1>動画ランキングサイト（テスト）</h1>
-  <div id="video-list">読み込み中...</div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>動画ランキングサイト</title>
+    <style>
+      body {
+        margin: 0;
+        background-color: #000;
+        color: #ff69b4;
+        font-family: Arial, sans-serif;
+      }
+      header { text-align: center; padding: 1em; }
+      .tabs { display: flex; justify-content: center; gap: 1em; margin-bottom: 1em; }
+      .tab { cursor: pointer; padding: 0.5em 1em; background: #222; border: 1px solid #ff69b4; user-select: none; }
+      .tab.active { background: #ff69b4; color: #000; }
+      .container { display: flex; max-width: 1200px; margin: auto; }
+      .ad-space { width: 15%; min-width: 80px; }
+      .content { width: 70%; display: grid; grid-template-columns: 1fr; gap: 1em; }
+      .video { border: 1px solid #ff69b4; padding: 0.5em; display: flex; align-items: center; gap: 1em; }
+      .video img { width: 120px; height: auto; cursor: pointer; flex-shrink: 0; }
+      .video-title { color: #ff69b4; word-break: break-word; }
+      .pagination { text-align: center; margin: 2em 0; }
+      .pagination button { margin: 0 0.5em; padding: 0.5em 1em; background: #ff69b4; color: #000; border: none; cursor: pointer; user-select: none; }
+      footer { text-align: center; padding: 2em; font-size: 0.9em; line-height: 1.6; color: #888; }
+      #popup-ad { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #111; border: 2px solid #ff69b4; padding: 2em; display: none; z-index: 1000; max-width: 300px; box-sizing: border-box; }
+      #popup-ad button#close-ad { float: right; cursor: pointer; background: none; border: none; color: #ff69b4; font-size: 1.5em; line-height: 1; padding: 0; margin: 0 0 0 0.5em; }
+      @media (max-width: 768px) { .container { flex-direction: column; align-items: center; } .ad-space { display: none; } .content { width: 100%; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>動画ランキング</h1>
+      <div class="tabs">
+        <div class="tab active" id="tab-popular" tabindex="0" role="button" aria-pressed="true">人気順</div>
+        <div class="tab" id="tab-latest" tabindex="0" role="button" aria-pressed="false">最新</div>
+      </div>
+    </header>
 
-  <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js";
+    <div class="container">
+      <div class="ad-space"></div>
+      <div class="content" id="video-list"></div>
+      <div class="ad-space"></div>
+    </div>
 
-    // Vercel環境変数を読み込む（ローカル動作時は直書きでもOK）
-    const supabaseUrl = process.env.SUPABASE_URL || "<YOUR_SUPABASE_URL>";
-    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || "<YOUR_SUPABASE_ANON_KEY>";
+    <div class="pagination">
+      <button id="btn-prev" aria-label="前のページ">前へ</button>
+      <span id="page-number" aria-live="polite" aria-atomic="true">1</span>
+      <button id="btn-next" aria-label="次のページ">次へ</button>
+    </div>
 
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    <footer>
+      <p>
+        当サイトは18歳以上の方を対象としています。<br>
+        本サイトに掲載されているリンク先のコンテンツは各運営元の責任に基づいて提供されています。<br>
+        当サイトはリンク紹介のみを行っており、コンテンツ自体を保存・配信しておりません。<br>
+        閲覧は自己責任にてお願いいたします。
+      </p>
+    </footer>
 
-    async function loadVideos() {
-      const { data, error } = await supabase
-        .from("videos")
-        .select("*")
-        .order("created_at", { ascending: false });
+    <div id="popup-ad"></div>
 
-      const container = document.getElementById("video-list");
-      container.innerHTML = "";
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+    <script>
+      // Supabase 初期化
+      const supabaseUrl = "https://hpampufhtpfkpccuzmli.supabase.co";
+      const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwYW1wdWZodHBma3BjY3V6bWxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5NjU0MzksImV4cCI6MjA2OTU0MTQzOX0.wr7xYs10fX7ruGLeAYofradM_HR42U1sXSJILrSchNA";
+      const supabase = Supabase.createClient(supabaseUrl, supabaseKey);
 
-      if (error) {
-        container.innerHTML = `<p style="color:red;">データ取得エラー: ${error.message}</p>`;
-        console.error(error);
-        return;
+      let currentTab = "popular";
+      let currentPage = 1;
+      const perPage = 10;
+      let allVideos = [];
+
+      function escapeHTML(str) {
+        if (!str) return "";
+        return str.replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
       }
 
-      if (!data || data.length === 0) {
-        container.innerHTML = "<p>まだ動画がありません</p>";
-        return;
+      async function loadVideos() {
+        const orderColumn = currentTab === "popular" ? "views" : "created_at";
+        const ascending = currentTab !== "popular";
+
+        const { data, error } = await supabase.from("videos").select("*").order(orderColumn, { ascending });
+        if (error) {
+          console.error("動画取得エラー:", error);
+          allVideos = [];
+        } else {
+          allVideos = data || [];
+        }
+        currentPage = 1;
+        renderVideos();
       }
 
-      data.forEach(video => {
-        const card = document.createElement("div");
-        card.className = "video-card";
+      function renderVideos() {
+        const start = (currentPage-1)*perPage;
+        const pageVideos = allVideos.slice(start, start+perPage);
 
-        card.innerHTML = `
-          <h3>${video.title}</h3>
-          <p>${video.description || "説明なし"}</p>
-          ${video.thumbnail_url ? `<img src="${video.thumbnail_url}" alt="サムネイル">` : ""}
-          <a href="${video.link_url}" target="_blank">動画を見る</a>
-          <p>再生数: ${video.views}</p>
-        `;
+        const list = document.getElementById("video-list");
+        list.innerHTML = "";
 
-        container.appendChild(card);
+        pageVideos.forEach(v => {
+          const videoDiv = document.createElement("div");
+          videoDiv.className = "video";
+
+          const thumbnail = v.thumbnail_url?.trim() ? v.thumbnail_url : "https://via.placeholder.com/120x90?text=No+Image";
+
+          const img = document.createElement("img");
+          img.src = thumbnail;
+          img.alt = escapeHTML(v.title || "無題");
+          img.style.cursor = "pointer";
+          img.tabIndex = 0;
+          img.addEventListener("click", ()=>incrementView(v.id, v.link_url));
+          img.addEventListener("keydown", e => { if(e.key==="Enter"||e.key===" "){incrementView(v.id,v.link_url); e.preventDefault();} });
+
+          const titleDiv = document.createElement("div");
+          titleDiv.className = "video-title";
+          titleDiv.textContent = `${v.title || "無題"}（${v.views ?? 0}回）`;
+
+          videoDiv.appendChild(img);
+          videoDiv.appendChild(titleDiv);
+          list.appendChild(videoDiv);
+        });
+
+        document.getElementById("page-number").textContent = currentPage;
+      }
+
+      function changePage(diff) {
+        const maxPage = Math.ceil(allVideos.length/perPage);
+        currentPage = Math.max(1, Math.min(currentPage+diff, maxPage));
+        renderVideos();
+      }
+
+      function switchTab(tab) {
+        document.querySelectorAll(".tab").forEach(el => { el.classList.remove("active"); el.setAttribute("aria-pressed","false"); });
+        const activeTab = tab==="popular" ? document.getElementById("tab-popular") : document.getElementById("tab-latest");
+        activeTab.classList.add("active"); activeTab.setAttribute("aria-pressed","true");
+        currentTab = tab;
+        loadVideos();
+      }
+
+      async function incrementView(id, link) {
+        if(!id || !link) return;
+        try {
+          const { data, error } = await supabase.from("videos").select("views").eq("id",id).single();
+          if(!error) {
+            const newViews = (data.views ?? 0)+1;
+            await supabase.from("videos").update({views:newViews}).eq("id",id);
+          }
+        } catch(e){console.error("ビュー更新例外:",e);}
+        window.open(link,"_blank");
+      }
+
+      function showPopupAd() {
+        const ad = document.getElementById("popup-ad");
+        ad.innerHTML = `<button id="close-ad" aria-label="広告を閉じる">×</button><div>ここに広告が表示されます</div>`;
+        ad.style.display = "block";
+        document.getElementById("close-ad").addEventListener("click", ()=>{ad.style.display="none";});
+      }
+
+      document.addEventListener("DOMContentLoaded", ()=>{
+        loadVideos();
+        document.getElementById("btn-prev").addEventListener("click", ()=>changePage(-1));
+        document.getElementById("btn-next").addEventListener("click", ()=>changePage(1));
+        document.getElementById("tab-popular").addEventListener("click", ()=>switchTab("popular"));
+        document.getElementById("tab-latest").addEventListener("click", ()=>switchTab("latest"));
+        setTimeout(showPopupAd,3000);
       });
-    }
-
-    loadVideos();
-  </script>
-  <script>
-  document.addEventListener("DOMContentLoaded", async () => {
-    const { createClient } = supabase;
-    const supabaseClient = createClient(
-      window.SUPABASE_URL,
-      window.SUPABASE_ANON_KEY
-    );
-
-    const { data, error } = await supabaseClient.from("videos").select("*");
-    console.log("Supabase データ:", data);
-    if (error) console.error("Supabase エラー:", error);
-  });
-</script>
-
-</body>
+    </script>
+  </body>
 </html>
