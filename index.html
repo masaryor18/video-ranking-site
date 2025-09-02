@@ -1,78 +1,100 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>動画ランキングサイト</title>
-  <link rel="icon" href="/favicon.ico" />
-  <!-- CSS（ここにデザインを入れている）-->
+  <meta charset="UTF-8">
+  <title>動画ランキングサイト（テスト）</title>
   <style>
-    :root { --bg:#000; --pink:#ff69b4; --panel:#111; --muted:#888; }
-    html,body{height:100%}
-    body{
-      margin:0; font-family: Arial, sans-serif; background:var(--bg); color:var(--pink);
-      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    body {
+      font-family: sans-serif;
+      background: #f9f9f9;
+      margin: 20px;
     }
-    header{ text-align:center; padding:1rem; }
-    h1{ margin:0 0 .4rem; font-size:1.4rem; }
-    .tabs{ display:flex; justify-content:center; gap:1rem; margin-bottom:1rem; }
-    .tab{ cursor:pointer; padding:.45rem .9rem; background:#222; border:1px solid var(--pink); user-select:none; }
-    .tab.active{ background:var(--pink); color:#000; }
-    .wrap{ max-width:1200px; margin:0 auto; display:flex; gap:1rem; padding:0 1rem; box-sizing:border-box; }
-    .ad-space{ width:15%; min-width:80px; background:#0b0b0b; border-radius:6px; }
-    .content{ flex:1 1 auto; width:70%; display:grid; gap:1rem; }
-    .video{ display:flex; gap:1rem; align-items:center; padding:.6rem; border:1px solid var(--pink); background:var(--panel); border-radius:6px; }
-    .video img{ width:120px; height:auto; border-radius:4px; cursor:pointer; transition:transform .2s; }
-    .video img:hover{ transform:scale(1.04); }
-    .video-title{ color:var(--pink); font-weight:600; word-break:break-word; }
-    .pagination{ text-align:center; margin:1.25rem 0; }
-    .pagination button{ background:var(--pink); color:#000; border:none; padding:.5rem .9rem; margin:0 .4rem; border-radius:6px; cursor:pointer; }
-    footer{ text-align:center; color:var(--muted); padding:2rem 1rem; font-size:.9rem; line-height:1.6; }
-    #popup-ad{ position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); background:#111; border:2px solid var(--pink); padding:1.2rem; display:none; z-index:9999; border-radius:8px; max-width:90%; box-sizing:border-box; color:var(--pink); }
-    #popup-ad button.close-ad{ float:right; cursor:pointer; background:none; border:none; color:var(--pink); font-size:1.2rem; line-height:1; padding:0; }
-    @media (max-width:900px){
-      .wrap{ flex-direction:column; align-items:center; }
-      .ad-space{ display:none; }
-      .content{ width:100%; }
+    h1 {
+      text-align: center;
+    }
+    #video-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .video-card {
+      background: #fff;
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .video-card img {
+      max-width: 100%;
+      border-radius: 6px;
+    }
+    .video-card h3 {
+      margin: 8px 0;
+      font-size: 18px;
+    }
+    .video-card p {
+      margin: 4px 0;
+      font-size: 14px;
+      color: #555;
+    }
+    .video-card a {
+      display: inline-block;
+      margin-top: 6px;
+      color: #0066cc;
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>動画ランキング</h1>
-    <div class="tabs" role="tablist" aria-label="表示切替">
-      <div class="tab active" id="tab-popular">人気順</div>
-      <div class="tab" id="tab-latest">最新</div>
-    </div>
-  </header>
+  <h1>動画ランキングサイト（テスト）</h1>
+  <div id="video-list">読み込み中...</div>
 
-  <main class="wrap" aria-live="polite">
-    <aside class="ad-space" aria-hidden="true"></aside>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
-    <section class="content" id="video-list" aria-label="動画一覧">
-      <!-- JS がここに差し込む -->
-    </section>
+    // Vercel環境変数を読み込む（ローカル動作時は直書きでもOK）
+    const supabaseUrl = process.env.SUPABASE_URL || "<YOUR_SUPABASE_URL>";
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || "<YOUR_SUPABASE_ANON_KEY>";
 
-    <aside class="ad-space" aria-hidden="true"></aside>
-  </main>
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-  <div class="pagination" id="pagination" aria-label="ページネーション">
-    <button id="prev-btn">前へ</button>
-    <span id="page-number" aria-live="polite" aria-atomic="true">1</span>
-    <button id="next-btn">次へ</button>
-  </div>
+    async function loadVideos() {
+      const { data, error } = await supabase
+        .from("videos")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-  <footer>
-    <p>
-      当サイトは18歳以上の方を対象としています。<br/>
-      当サイトはリンク紹介のみを行っており、コンテンツ自体を保存・配信しておりません。<br/>
-      閲覧は自己責任でお願いいたします。
-    </p>
-  </footer>
+      const container = document.getElementById("video-list");
+      container.innerHTML = "";
 
-  <div id="popup-ad" role="dialog" aria-modal="true" aria-hidden="true"></div>
+      if (error) {
+        container.innerHTML = `<p style="color:red;">データ取得エラー: ${error.message}</p>`;
+        console.error(error);
+        return;
+      }
 
-  <!-- Vite はこのスクリプトをモジュールとして読み込みます -->
-  <script type="module" src="/src/main.js"></script>
+      if (!data || data.length === 0) {
+        container.innerHTML = "<p>まだ動画がありません</p>";
+        return;
+      }
+
+      data.forEach(video => {
+        const card = document.createElement("div");
+        card.className = "video-card";
+
+        card.innerHTML = `
+          <h3>${video.title}</h3>
+          <p>${video.description || "説明なし"}</p>
+          ${video.thumbnail_url ? `<img src="${video.thumbnail_url}" alt="サムネイル">` : ""}
+          <a href="${video.link_url}" target="_blank">動画を見る</a>
+          <p>再生数: ${video.views}</p>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    loadVideos();
+  </script>
 </body>
 </html>
