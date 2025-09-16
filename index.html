@@ -1,160 +1,171 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>動画ランキングサイト</title>
-    <style>
-      body {
-        margin: 0;
-        background-color: #000;
-        color: #ff69b4;
-        font-family: Arial, sans-serif;
-      }
-      header {
-        text-align: center;
-        padding: 1em;
-      }
-      .tabs {
-        display: flex;
-        justify-content: center;
-        gap: 1em;
-        margin-bottom: 1em;
-      }
-      .tab {
-        cursor: pointer;
-        padding: 0.5em 1em;
-        background: #222;
-        border: 1px solid #ff69b4;
-        user-select: none;
-      }
-      .tab.active {
-        background: #ff69b4;
-        color: #000;
-      }
-      .container {
-        display: flex;
-        max-width: 1200px;
-        margin: auto;
-      }
-      .ad-space {
-        width: 15%;
-        min-width: 80px;
-      }
-      .content {
-        width: 70%;
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 1em;
-      }
-      .video {
-        border: 1px solid #ff69b4;
-        padding: 0.5em;
-        display: flex;
-        align-items: center;
-        gap: 1em;
-      }
-      .video img {
-        width: 120px;
-        height: auto;
-        cursor: pointer;
-        flex-shrink: 0;
-      }
-      .video-title {
-        color: #ff69b4;
-        word-break: break-word;
-      }
-      .pagination {
-        text-align: center;
-        margin: 2em 0;
-      }
-      .pagination button {
-        margin: 0 0.5em;
-        padding: 0.5em 1em;
-        background: #ff69b4;
-        color: #000;
-        border: none;
-        cursor: pointer;
-        user-select: none;
-      }
-      footer {
-        text-align: center;
-        padding: 2em;
-        font-size: 0.9em;
-        line-height: 1.6;
-        color: #888;
-      }
-      #popup-ad {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: #111;
-        border: 2px solid #ff69b4;
-        padding: 2em;
-        display: none;
-        z-index: 1000;
-        max-width: 300px;
-        box-sizing: border-box;
-      }
-      #popup-ad button.close-ad {
-        float: right;
-        cursor: pointer;
-        background: none;
-        border: none;
-        color: #ff69b4;
-        font-size: 1.5em;
-        line-height: 1;
-        padding: 0;
-        margin: 0 0 0 0.5em;
-      }
-      @media (max-width: 768px) {
-        .container {
-          flex-direction: column;
-          align-items: center;
-        }
-        .ad-space {
-          display: none;
-        }
-        .content {
-          width: 100%;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <header>
-      <h1>動画ランキング</h1>
-      <div class="tabs">
-        <div class="tab active" id="tab-popular" tabindex="0" role="button" aria-pressed="true">人気順</div>
-        <div class="tab" id="tab-latest" tabindex="0" role="button" aria-pressed="false">最新</div>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>動画ランキングサイト</title>
+  <style>
+    /* --- ページ共通スタイル（黒背景・ピンク文字） --- */
+    :root {
+      --bg: #000;
+      --pink: #ff69b4;
+      --muted: #888;
+      --panel-bg: #111;
+    }
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--pink);font-family:Arial,Helvetica,sans-serif}
+    header{ text-align:center;padding:1.2em 0 }
+    h1{ margin:0 0 .6em 0; font-size:2rem }
+    .tabs{ display:flex; justify-content:center; gap:1em; margin-bottom:1em }
+    .tab{ cursor:pointer; padding:.5em 1em; background:#222; border:1px solid var(--pink); user-select:none }
+    .tab.active{ background:var(--pink); color:#000 }
+    .container{ display:flex; max-width:1200px; margin:0 auto; padding:0 16px; box-sizing:border-box }
+    .ad-space{ width:15%; min-width:80px }
+    .content{ width:70%; display:grid; grid-template-columns:1fr; gap:1em }
+    .video{ border:1px solid var(--pink); padding:.6em; display:flex; align-items:center; gap:1em; background:transparent }
+    .video img{ width:120px; height:auto; cursor:pointer; flex-shrink:0; background:#000; object-fit:cover }
+    .video-title{ color:var(--pink); word-break:break-word }
+    .pagination{ text-align:center; margin:2em 0 }
+    .pagination button{ margin:0 .4em; padding:.5em 1em; background:var(--pink); color:#000; border:none; cursor:pointer; user-select:none }
+    footer{ text-align:center; padding:2em; font-size:.9em; line-height:1.6; color:var(--muted) }
+
+    /* popup ad */
+    #popup-ad{ position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--panel-bg); border:2px solid var(--pink); padding:1.2em; display:none; z-index:1200; max-width:320px; box-sizing:border-box }
+    #popup-ad button.close-ad{ float:right; cursor:pointer; background:none; border:none; color:var(--pink); font-size:1.4em }
+
+    /* 年齢確認モーダル */
+    #age-modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.85); z-index:2000; }
+    #age-modal .box{ background:#111; border:2px solid var(--pink); padding:2rem; width:min(520px,92%); box-sizing:border-box; color:var(--pink); text-align:center; border-radius:8px }
+    #age-modal h2{ margin:0 0 .6rem 0; font-size:1.4rem }
+    #age-modal p{ margin:.4rem 0 1rem 0; color:var(--muted) }
+    #age-modal .controls{ display:flex; gap:1rem; justify-content:center; margin-top:1rem; flex-wrap:wrap }
+    #age-modal button{ padding:.6em 1.2em; border-radius:6px; border:none; cursor:pointer }
+    #btn-age-yes{ background:var(--pink); color:#000 }
+    #btn-age-no{ background:#222; color:var(--pink); border:1px solid var(--pink) }
+
+    @media (max-width:768px){
+      .container{ flex-direction:column; align-items:center }
+      .ad-space{ display:none }
+      .content{ width:100% }
+      #age-modal .box{ padding:1rem }
+    }
+  </style>
+</head>
+<body>
+  <!-- 年齢確認モーダル（ページロード時は常に表示判定） -->
+  <div id="age-modal" aria-hidden="true" style="display:none;">
+    <div class="box" role="dialog" aria-labelledby="age-title" aria-modal="true">
+      <h2 id="age-title">年齢確認</h2>
+      <p>当サイトは18歳以上の方を対象としています。18歳以上ですか？</p>
+      <div class="controls">
+        <button id="btn-age-yes" type="button">はい（18歳以上）</button>
+        <button id="btn-age-no" type="button">いいえ（17歳以下）</button>
       </div>
-    </header>
-
-    <div class="container">
-      <div class="ad-space"></div>
-      <div class="content" id="video-list"></div>
-      <div class="ad-space"></div>
     </div>
+  </div>
 
-    <div class="pagination">
-      <button id="prev-btn" aria-label="前のページ">前へ</button>
-      <span id="page-number" aria-live="polite" aria-atomic="true">1</span>
-      <button id="next-btn" aria-label="次のページ">次へ</button>
+  <!-- メインコンテンツ（初期は見えていてもモーダルでブロックされる） -->
+  <header>
+    <h1>動画ランキング</h1>
+    <div class="tabs">
+      <div class="tab active" id="tab-popular" tabindex="0" role="button" aria-pressed="true">人気順</div>
+      <div class="tab" id="tab-latest" tabindex="0" role="button" aria-pressed="false">最新</div>
     </div>
+  </header>
 
-    <footer>
-      <p>
-        当サイトは18歳以上の方を対象としています。<br />
-        本サイトに掲載されているリンク先のコンテンツは各運営元の責任に基づいて提供されています。<br />
-        当サイトはリンク紹介のみを行っており、コンテンツ自体を保存・配信しておりません。<br />
-        閲覧は自己責任にてお願いいたします。
-      </p>
-    </footer>
+  <div class="container" id="site-root">
+    <div class="ad-space" aria-hidden="true"></div>
+    <div class="content" id="video-list"><!-- 動画リストは main.js が注入します --></div>
+    <div class="ad-space" aria-hidden="true"></div>
+  </div>
 
-    <div id="popup-ad" aria-hidden="true"></div>
+  <div class="pagination">
+    <button id="prev-btn" aria-label="前のページ">前へ</button>
+    <span id="page-number" aria-live="polite" aria-atomic="true">1</span>
+    <button id="next-btn" aria-label="次のページ">次へ</button>
+  </div>
 
-    <!-- Vite がビルド時に main.js を読み込む -->
-    <script type="module" src="/src/main.js"></script>
-  </body>
+  <footer>
+    <p>
+      当サイトは18歳以上の方を対象としています。<br>
+      本サイトに掲載されているリンク先のコンテンツは各運営元の責任に基づいて提供されています。<br>
+      当サイトはリンク紹介のみを行っており、コンテンツ自体を保存・配信しておりません。<br>
+      閲覧は自己責任にてお願いいたします。
+    </p>
+  </footer>
+
+  <div id="popup-ad" aria-hidden="true"></div>
+
+  <script>
+    /* 年齢確認ロジック:
+       - localStorage key を使って一度確認したらスキップ
+       - 「はい」を押したら main.js を動的に読み込み（不要なバックエンドアクセスを阻止）
+       - 「いいえ」を押したら under18.html にリダイレクト
+    */
+    (function(){
+      const STORAGE_KEY = 'ageVerified_v1';
+      const modal = document.getElementById('age-modal');
+      const btnYes = document.getElementById('btn-age-yes');
+      const btnNo = document.getElementById('btn-age-no');
+
+      // 動的に main.js を読み込む関数（type=module）
+      function loadAppModule(){
+        // 既に読み込まれていたら何もしない
+        if (document.querySelector('script[data-app-module]')) return;
+        const s = document.createElement('script');
+        s.type = 'module';
+        s.src = '/src/main.js';
+        s.setAttribute('data-app-module', '1');
+        document.body.appendChild(s);
+      }
+
+      // 表示制御
+      function showModal() {
+        modal.style.display = 'flex';
+        modal.setAttribute('aria-hidden', 'false');
+      }
+      function hideModal() {
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+      }
+
+      // Yes: 許諾 -> localStorage に保存してアプリを読み込む
+      btnYes.addEventListener('click', () => {
+        try { localStorage.setItem(STORAGE_KEY, 'true'); } catch(e){ /* ignore */ }
+        hideModal();
+        loadAppModule();
+      });
+
+      // No: 17歳以下 -> 強制移動
+      btnNo.addEventListener('click', () => {
+        // オプション: localStorage に記録して戻れないようにする場合は記録してもよい
+        window.location.href = '/under18.html';
+      });
+
+      // 初期判定
+      document.addEventListener('DOMContentLoaded', () => {
+        const ok = (function(){
+          try { return localStorage.getItem(STORAGE_KEY) === 'true' } catch(e){ return false }
+        })();
+
+        if (ok) {
+          // 確認済みならモーダルを出さずにアプリを読み込む
+          hideModal();
+          loadAppModule();
+        } else {
+          showModal();
+        }
+      });
+
+      // キーボードで年齢確認（アクセシビリティ向上）
+      document.addEventListener('keydown', (e) => {
+        if (modal.style.display === 'flex') {
+          if (e.key === 'Escape') {
+            // ESC を「いいえ」扱いして離脱させたい場合は下の行を有効に
+            // window.location.href = '/under18.html';
+          }
+        }
+      });
+    })();
+  </script>
+</body>
 </html>
