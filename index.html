@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>動画ランキングサイト</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <!-- 年齢確認 UI -->
   <div id="age-check" class="age-check">
     <h2>年齢確認</h2>
-    <p>このサイトは18歳以上のみ利用できます。あなたの年齢を選択してください。</p>
+    <p>このサイトは18歳以上を対象としています。<br>あなたの年齢を選択してください。</p>
     <button id="btn-over18">18歳以上</button>
     <button id="btn-under18">18歳未満</button>
   </div>
 
-  <!-- 動画サイト本体（初期状態では非表示） -->
+  <!-- サイト全体のラッパー -->
   <div id="site-content" style="display:none;">
     <header>
-      <h1>動画ランキング</h1>
+      <h1>動画ランキングサイト</h1>
       <nav>
         <button id="tab-popular" class="active">人気順</button>
         <button id="tab-latest">新着順</button>
@@ -27,6 +27,7 @@
 
     <main>
       <div id="video-list" class="video-list"></div>
+
       <div class="pagination">
         <button id="prev-btn">前へ</button>
         <span id="page-number">1</span>
@@ -34,25 +35,32 @@
       </div>
     </main>
 
-    <aside id="popup-ad" class="popup-ad" aria-hidden="true"></aside>
+    <footer>
+      <p>&copy; 2025 動画ランキングサイト</p>
+    </footer>
+
+    <!-- 広告スペース -->
+    <div id="popup-ad" class="popup-ad" aria-hidden="true"></div>
   </div>
 
+  <script type="module" src="src/main.js"></script>
   <script>
-    document.getElementById('btn-over18').addEventListener('click', () => {
-      // 年齢確認 UI を消して本体を表示
-      document.getElementById('age-check').style.display = 'none'
-      document.getElementById('site-content').style.display = 'block'
+    // 年齢確認の処理
+    document.addEventListener("DOMContentLoaded", () => {
+      const ageCheck = document.getElementById("age-check");
+      const siteContent = document.getElementById("site-content");
+      const over18Btn = document.getElementById("btn-over18");
+      const under18Btn = document.getElementById("btn-under18");
 
-      // main.js を動的に読み込む
-      const script = document.createElement('script')
-      script.type = 'module'
-      script.src = '/src/main.js'
-      document.body.appendChild(script)
-    })
+      over18Btn.addEventListener("click", () => {
+        ageCheck.style.display = "none";
+        siteContent.style.display = "block";
+      });
 
-    document.getElementById('btn-under18').addEventListener('click', () => {
-      window.location.href = '/under18.html'
-    })
+      under18Btn.addEventListener("click", () => {
+        window.location.href = "/under18.html";
+      });
+    });
   </script>
 </body>
 </html>
