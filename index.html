@@ -4,61 +4,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>動画ランキングサイト</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="./src/style.css">
 </head>
 <body>
-  <!-- 年齢確認 UI -->
-  <div id="age-check" class="age-check">
-    <h2>年齢確認</h2>
-    <p>このサイトは18歳以上を対象としています。<br>あなたの年齢を選択してください。</p>
-    <button id="btn-over18">18歳以上</button>
-    <button id="btn-under18">18歳未満</button>
+  <!-- 年齢確認モーダル -->
+  <div id="age-gate" class="age-gate">
+    <div class="age-gate-content">
+      <h2>年齢確認</h2>
+      <p>このサイトは18歳以上を対象としています。あなたの年齢を選択してください。</p>
+      <button id="over18">18歳以上</button>
+      <button id="under18">18歳未満</button>
+    </div>
   </div>
 
-  <!-- サイト全体のラッパー -->
-  <div id="site-content" style="display:none;">
-    <header>
-      <h1>動画ランキングサイト</h1>
-      <nav>
-        <button id="tab-popular" class="active">人気順</button>
-        <button id="tab-latest">新着順</button>
-      </nav>
-    </header>
-
-    <main>
-      <div id="video-list" class="video-list"></div>
-
-      <div class="pagination">
-        <button id="prev-btn">前へ</button>
-        <span id="page-number">1</span>
-        <button id="next-btn">次へ</button>
-      </div>
-    </main>
-
-    <footer>
-      <p>&copy; 2025 動画ランキングサイト</p>
-    </footer>
-
-    <!-- 広告スペース -->
+  <!-- ランキング本体 -->
+  <div id="main-content" style="display:none;">
+    <h1>動画ランキング</h1>
+    <div class="tabs">
+      <button id="tab-popular" class="active">人気順</button>
+      <button id="tab-latest">最新</button>
+    </div>
+    <div id="video-list"></div>
+    <div class="pagination">
+      <button id="prev-btn">前へ</button>
+      <span id="page-number">1</span>
+      <button id="next-btn">次へ</button>
+    </div>
     <div id="popup-ad" class="popup-ad" aria-hidden="true"></div>
   </div>
 
-  <script type="module" src="src/main.js"></script>
+  <script src="./src/main.js" type="module"></script>
   <script>
-    // 年齢確認の処理
-    document.addEventListener("DOMContentLoaded", () => {
-      const ageCheck = document.getElementById("age-check");
-      const siteContent = document.getElementById("site-content");
-      const over18Btn = document.getElementById("btn-over18");
-      const under18Btn = document.getElementById("btn-under18");
+    document.addEventListener('DOMContentLoaded', () => {
+      const gate = document.getElementById('age-gate');
+      const main = document.getElementById('main-content');
 
-      over18Btn.addEventListener("click", () => {
-        ageCheck.style.display = "none";
-        siteContent.style.display = "block";
+      document.getElementById('over18').addEventListener('click', () => {
+        gate.style.display = 'none';
+        main.style.display = 'block';
       });
 
-      under18Btn.addEventListener("click", () => {
-        window.location.href = "/under18.html";
+      document.getElementById('under18').addEventListener('click', () => {
+        window.location.href = '/under18.html';
       });
     });
   </script>
