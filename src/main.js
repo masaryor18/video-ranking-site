@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // popup ad
   setTimeout(() => {
     const popup = document.getElementById('popup-ad')
-    popup.innerHTML = '<button class="close-ad" aria-label="広告を閉じる">×</button><div style="padding-top:.4rem;">広告スペース</div>'
+    popup.innerHTML = '<button class="close-ad" aria-label="広告を閉じる">×</button><div style="padding-top:.4rem;"><a href="https://al.fanza.co.jp/?lurl=https%3A%2F%2Fwww.dmm.co.jp%2Fdc%2Fdoujin%2F-%2Fdetail%2F%3D%2Fcid%3Dd_664981%2F&af_id=masaya18-004&ch=search_link&ch_id=package" rel="sponsored" target="_blank"><img src="https://doujin-assets.dmm.co.jp/digital/comic/d_664981/d_664981pl.jpg" style="margin:0;padding:0;border:0;max-width:100%" /></a></div>'
     popup.style.display = 'block'
     popup.setAttribute('aria-hidden','false')
     popup.querySelector('.close-ad').addEventListener('click', () => { popup.style.display = 'none'; popup.setAttribute('aria-hidden','true') })
