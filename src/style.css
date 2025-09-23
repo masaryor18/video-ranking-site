@@ -128,72 +128,17 @@ h1 {
   cursor: pointer;
 }
 
-footer {
-  text-align: center;
-  padding: 2em;
-  font-size: 0.9em;
-  line-height: 1.6;
-  color: #888;
-  background-color: #000; /* 元の背景に合わせる */
-}
-
-footer .disclaimer {
-  margin-top: 2rem;
+.disclaimer {
   font-size: 0.85rem;
   color: #666;
-  line-height: 1.6;
-  text-align: left;
+  margin: 2rem auto;
   max-width: 800px;
-  margin-left: auto;
-  margin-right: auto;
+  line-height: 1.6;
 }
 
-footer .disclaimer h3 {
+.disclaimer h3 {
   font-size: 1rem;
   margin-top: 1rem;
-  color: deeppink; /* タイトルを濃いピンクに */
+  color: #d63384; /* 濃いピンク系（deep pink風） */
 }
 
-/* ポップアップ広告（中央表示） */
-.popup-ad {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.6); /* 背景を半透明の黒で覆う */
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.popup-ad-content {
-  background: #fff;
-  padding: 1rem;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-  text-align: center;
-  max-width: 90%;
-  max-height: 90%;
-}
-
-.popup-ad-content img {
-  width: 600px;  /* 広告サイズを大きめに指定 */
-  height: auto;
-  border-radius: 8px;
-}
-
-.close-ad {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: #ff4081;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  font-size: 1.5rem;
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
-}
