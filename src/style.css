@@ -76,25 +76,55 @@ h1 {
   cursor: pointer;
 }
 
-/* 広告ポップアップ */
+/* 広告ポップアップ（オーバーレイ背景） */
 .popup-ad {
   display: none;
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: pink;
-  color: black;
-  padding: 1rem;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(255, 105, 180, 0.7);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6); /* 背景を半透明の黒で覆う */
+  justify-content: center;
+  align-items: center;
   z-index: 1000;
 }
 
+/* 広告枠 */
+.popup-ad-content {
+  position: relative; /* ❌ボタン配置の基準にする */
+  background: #fff;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  text-align: center;
+  max-width: 90%;
+  max-height: 90%;
+}
+
+/* 広告画像 */
+.popup-ad-content img {
+  width: 600px;  /* 広告サイズを大きめに指定 */
+  height: auto;
+  border-radius: 8px;
+}
+
+/* 閉じるボタン（広告枠右上ギリギリ） */
 .close-ad {
-  background: transparent;
+  position: absolute;
+  top: 8px;   /* 広告枠の内側に寄せる */
+  right: 8px; /* 広告枠の内側に寄せる */
+  background: #ff4081;
+  color: white;
   border: none;
+  border-radius: 50%;
   font-size: 1.2rem;
+  width: 36px;
+  height: 36px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* 年齢確認モーダル */
@@ -128,6 +158,7 @@ h1 {
   cursor: pointer;
 }
 
+/* 免責事項 */
 .disclaimer {
   font-size: 0.85rem;
   color: #666;
@@ -140,48 +171,4 @@ h1 {
   font-size: 1rem;
   margin-top: 1rem;
   color: #d63384; /* 濃いピンク系（deep pink風） */
-}
-
-/* ポップアップ広告（中央表示） */
-.popup-ad {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.6); /* 背景を半透明の黒で覆う */
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.popup-ad-content {
-  background: #fff;
-  padding: 1rem;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-  text-align: center;
-  max-width: 90%;
-  max-height: 90%;
-}
-
-.popup-ad-content img {
-  width: 600px;  /* 広告サイズを大きめに指定 */
-  height: auto;
-  border-radius: 8px;
-}
-
-.close-ad {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: #ff4081;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  font-size: 1.5rem;
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
 }
