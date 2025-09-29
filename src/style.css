@@ -145,7 +145,7 @@ h1 {
 /* ポップアップ広告（中央表示） */
 .popup-ad {
   display: none;
-  position: fixed;
+  position: relative;
   top: 0;
   left: 0;
   width: 100%;
