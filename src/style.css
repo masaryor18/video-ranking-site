@@ -114,17 +114,12 @@ h1 {
   position: absolute;
   top: 8px;   /* 広告枠の内側に寄せる */
   right: 8px; /* 広告枠の内側に寄せる */
-  background: #ff4081;
-  color: white;
+  background: transparent; /* ← 背景を透明に */
+  color: #ff4081;          /* ❌の色をピンクに */
   border: none;
-  border-radius: 50%;
-  font-size: 1.2rem;
-  width: 36px;
-  height: 36px;
+  font-size: 1.5rem;       /* ❌マークの大きさ */
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  line-height: 1;          /* アイコンの縦位置を安定させる */
 }
 
 /* 年齢確認モーダル */
