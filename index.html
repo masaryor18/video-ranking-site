@@ -1,65 +1,98 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>動画ランキングサイト</title>
-  <link rel="stylesheet" href="./src/style.css" />
-  <script defer src="./src/main.js"></script>
+  <link rel="stylesheet" href="./src/style.css">
 </head>
+
+
 <body>
-  <!-- 年齢確認 UI -->
-  <div id="age-verification" class="age-verification">
-    <h2>年齢確認</h2>
-    <p>このサイトは18歳以上を対象としています。あなたの年齢を選択してください。</p>
-    <button onclick="enterSite()">18歳以上</button>
-    <button onclick="underAge()">18歳未満</button>
-  </div>
-
-  <!-- メインコンテンツ -->
-  <div id="main-content" style="display:none;">
-    <header>
-      <h1>動画ランキングサイト</h1>
-    </header>
-
-    <main>
-      <div id="video-list" class="video-list">
-        <!-- Supabaseから動画がここに挿入される -->
-      </div>
-    </main>
-
-    <!-- フッター（免責事項） -->
-    <footer>
-      <div class="disclaimer">
-        <h3>【免責事項】</h3>
-        <p>
-          当サイトは外部サイト上に存在する公開コンテンツの情報をまとめたものであり、動画や画像の内容について一切の責任を負いません。
-          各リンク先の内容については該当運営元にご確認ください。
-        </p>
-        <h3>【法令遵守について】</h3>
-        <p>
-          当サイトはわいせつ物の頒布・陳列を目的としたものではありません。合法な範囲での情報提供を目的とし、掲載内容に問題がある場合は速やかに削除・対応いたします。
-        </p>
-        <h3>【18歳未満閲覧禁止】</h3>
-        <p>
-          当サイトは成人向けコンテンツを含みます。18歳未満の方は直ちにご退場ください。
-        </p>
-      </div>
-    </footer>
-  </div>
-
-  <!-- ポップアップ広告 -->
-  <div id="popup-ad" class="popup">
-    <div class="popup-content">
-      <span class="close-btn" onclick="closePopup()">&times;</span>
-      <!-- 広告リンク -->
-      <a href="https://al.fanza.co.jp/?lurl=https%3A%2F%2Fwww.dmm.co.jp%2Fdc%2Fdoujin%2F-%2Fdetail%2F%3D%2Fcid%3Dd_664981%2F&af_id=masaya18-004&ch=search_link&ch_id=package"
-         rel="sponsored" target="_blank">
-        <img src="https://doujin-assets.dmm.co.jp/digital/comic/d_664981/d_664981pl.jpg"
-             alt="広告バナー"
-             style="margin:0;padding:0;border:0;max-width:100%;height:auto;" />
-      </a>
+  <!-- 年齢確認モーダル -->
+  <div id="age-gate" class="age-gate">
+    <div class="age-gate-content">
+      <h2>年齢確認</h2>
+      <p>このサイトは18歳以上を対象としています。あなたの年齢を選択してください。</p>
+      <button id="over18">18歳以上</button>
+      <button id="under18">18歳未満</button>
     </div>
   </div>
+
+  <!-- ランキング本体 -->
+  <div id="main-content" style="display:none;">
+    <h1>動画ランキング</h1>
+    <div class="tabs">
+      <button id="tab-popular" class="active">人気順</button>
+      <button id="tab-latest">最新</button>
+    </div>
+    <div id="video-list"></div>
+    <div class="pagination">
+      <button id="prev-btn">前へ</button>
+      <span id="page-number">1</span>
+      <button id="next-btn">次へ</button>
+    </div>
+  </div>
+
+  <script src="./src/main.js" type="module"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const gate = document.getElementById('age-gate');
+      const main = document.getElementById('main-content');
+
+      document.getElementById('over18').addEventListener('click', () => {
+        gate.style.display = 'none';
+        main.style.display = 'block';
+      });
+
+      document.getElementById('under18').addEventListener('click', () => {
+        window.location.href = '/under18.html';
+      });
+    });
+  </script>
+  <!-- ポップアップ広告 -->
+<!-- ポップアップ広告 -->
+<div id="popup-ad" class="popup">
+  <div class="popup-content">
+    <span class="close-btn" onclick="closePopup()">&times;</span>
+
+    <!-- 広告リンク -->
+    <a href="https://al.fanza.co.jp/?lurl=https%3A%2F%2Fwww.dmm.co.jp%2Fdc%2Fdoujin%2F-%2Fdetail%2F%3D%2Fcid%3Dd_664981%2F&af_id=masaya18-004&ch=search_link&ch_id=package"
+       rel="sponsored" target="_blank">
+      <img src="https://doujin-assets.dmm.co.jp/digital/comic/d_664981/d_664981pl.jpg"
+           alt="広告バナー"
+           style="margin:0;padding:0;border:0;max-width:100%;height:auto;" />
+    </a>
+
+  </div>
+</div>
+</div>
+
 </body>
+  <footer>
+    <p>
+      当サイトは18歳以上の方を対象としています。<br>
+      本サイトに掲載されているリンク先のコンテンツは各運営元の責任に基づいて提供されています。<br>
+      当サイトはリンク紹介のみを行っており、コンテンツ自体を保存・配信しておりません。<br>
+      閲覧は自己責任にてお願いいたします。
+    </p>
+
+    <!-- 免責事項 -->
+    <div class="disclaimer">
+      <h3>【免責事項】</h3>
+      <p>
+        当サイトは外部サイト上に存在する公開コンテンツの情報をまとめたものであり、動画や画像の内容について一切の責任を負いません。
+        各リンク先の内容については該当運営元にご確認ください。
+      </p>
+      <h3>【法令遵守について】</h3>
+      <p>
+        当サイトはわいせつ物の頒布・陳列を目的としたものではありません。合法な範囲での情報提供を目的とし、掲載内容に問題がある場合は速やかに削除・対応いたします。
+      </p>
+      <h3>【18歳未満閲覧禁止】</h3>
+      <p>
+        当サイトは成人向けコンテンツを含みます。18歳未満の方は直ちにご退場ください。
+      </p>
+    </div>
+  </footer>
+
 </html>
