@@ -1,5 +1,6 @@
 // src/main.js
 import { createClient } from '@supabase/supabase-js'
+import { bannerAd } from './ads.js'
 
 /* --- 環境変数（Vite 経由） --- */
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
@@ -148,7 +149,10 @@ setTimeout(() => {
   })
 }, 3000)
 
-
+const adContainer = document.getElementById('banner-ad');
+  if (adContainer) {
+    adContainer.innerHTML = bannerAd;   // ads.js から読み込んだ広告を挿入
+  }
   // 初回ロード
   loadAndRender()
 })
