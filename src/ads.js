@@ -1,6 +1,3 @@
 export const bannerAd = `
-  <a href="https://al.fanza.co.jp/?lurl=https%3A..." rel="sponsored" target="_blank">
-    <img src="https://doujin-assets.dmm.co.jp/digital/comic/d_664981/d_664981pl.jpg" 
-         style="margin:0;padding:0;border:0;max-width:100%;" alt="広告バナー" />
-  </a>
+  <ins class="widget-banner"></ins><script class="widget-banner-script" src=" https://widget-view.dmm.co.jp/js/banner_placement.js?affiliate_id=masaya18-004&banner_id=1650_468_60 "></script>
 `;
