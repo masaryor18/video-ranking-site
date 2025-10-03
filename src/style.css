@@ -167,3 +167,18 @@ h1 {
   margin-top: 1rem;
   color: #d63384; /* 濃いピンク系（deep pink風） */
 }
+
+/* バナー広告 */
+.banner-ad {
+  margin: 1rem auto;       /* 上下に余白をつける */
+  text-align: center;      /* 中央寄せ */
+  max-width: 600px;        /* 最大幅（画面が広い場合の制御） */
+  width: 90%;              /* スマホなど小さい画面対応 */
+}
+
+.banner-ad img {
+  width: 100%;             /* バナーが親要素にフィット */
+  height: auto;
+  border-radius: 8px;      /* 角丸（不要なら削除OK） */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2); /* ちょっと浮かせる影 */
+}
