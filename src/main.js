@@ -1,6 +1,7 @@
 // src/main.js
 import { createClient } from '@supabase/supabase-js'
 import { bannerAd } from './ads.js'
+import { showPopupAd } from './popup_ad.js'
 
 /* --- 環境変数（Vite 経由） --- */
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
@@ -138,16 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('next-btn').addEventListener('click', () => { if (currentPage * PAGE_SIZE < cachedVideos.length) { currentPage++; render() } })
 
   // popup ad
-setTimeout(() => {
-  const popup = document.getElementById('popup-ad')
-  popup.style.display = 'flex'  // flexで中央に配置
-  popup.setAttribute('aria-hidden', 'false')
-
-  popup.querySelector('.close-ad').addEventListener('click', () => {
-    popup.style.display = 'none'
-    popup.setAttribute('aria-hidden','true')
-  })
-}, 3000)
+showPopupAd(3000)  // ← 3秒後にポップアップを表示
 
 const adContainer = document.getElementById('banner-ad');
   if (adContainer) {
