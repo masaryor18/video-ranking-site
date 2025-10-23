@@ -25,23 +25,13 @@ function escapeHTML(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, m
 /* --- データ取得 --- */
 async function fetchVideos(){
   try {
-    if (currentTab === 'popular') {
-      const { data, error } = await supabase
-        .from('videos')
-        .select('id,title,thumbnail_url,link_url,views,created_at')
-        .order('views', { ascending: false })
-        .limit(200)
-      if (error) { console.error('fetchVideos error:', error); return [] }
-      return data || []
-    } else {
-      const { data, error } = await supabase
-        .from('videos')
-        .select('id,title,thumbnail_url,link_url,views,created_at')
-        .order('created_at', { ascending: false })
-        .limit(200)
-      if (error) { console.error('fetchVideos error:', error); return [] }
-      return data || []
+    // RPCを呼び出して動画データを取得
+    const { data, error } = await supabase.rpc('get_videos', { p_sort: currentTab })
+    if (error) {
+      console.error('fetchVideos error:', error)
+      return []
     }
+    return data || []
   } catch(e){
     console.error('fetchVideos exception:', e)
     return []
@@ -113,7 +103,20 @@ async function onThumbClick(id, link){
 
 /* --- 初期化 --- */
 async function loadAndRender(){
-  cachedVideos = await fetchVideos()
+  // ① キャッシュを確認
+  const cached = localStorage.getItem('videos')
+
+  if (cached) {
+    console.log('✅ キャッシュから読み込みました')
+    cachedVideos = JSON.parse(cached)
+  } else {
+    console.log('🌐 Supabaseから新規取得')
+    cachedVideos = await fetchVideos()
+    // ② キャッシュ保存（5分間だけ有効）
+    localStorage.setItem('videos', JSON.stringify(cachedVideos))
+    setTimeout(() => localStorage.removeItem('videos'), 5 * 60 * 1000)
+  }
+
   currentPage = 1
   render()
 }
