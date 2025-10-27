@@ -38,20 +38,35 @@
 
   <script src="./src/main.js" type="module"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const gate = document.getElementById('age-gate');
-      const main = document.getElementById('main-content');
+  document.addEventListener('DOMContentLoaded', () => {
+    // ✅ index.html 以外ではこのスクリプトを無効化する
+    const path = window.location.pathname;
+    if (!path.endsWith('/index.html') && path !== '/') {
+      return;
+    }
 
-      document.getElementById('over18').addEventListener('click', () => {
+    const gate = document.getElementById('age-gate');
+    const main = document.getElementById('main-content');
+    if (!gate || !main) return;
+
+    const over18 = document.getElementById('over18');
+    const under18 = document.getElementById('under18');
+
+    if (over18) {
+      over18.addEventListener('click', () => {
         gate.style.display = 'none';
         main.style.display = 'block';
       });
+    }
 
-      document.getElementById('under18').addEventListener('click', () => {
+    if (under18) {
+      under18.addEventListener('click', () => {
         window.location.href = '/under18.html';
       });
-    });
-  </script>
+    }
+  });
+</script>
+
   <div id="popup-ad" class="popup-ad" aria-hidden="true">
   <div class="popup-ad-content">
     <button class="close-ad" aria-label="広告を閉じる">×</button>
