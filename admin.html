@@ -1,61 +1,47 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>管理画面</title>
-  <link rel="stylesheet" href="./src/style.css" />
+  <link rel="stylesheet" href="./src/style.css">
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#f7f7f8; padding:24px; }
-    .card { max-width:720px; margin:0 auto; background:#fff; border-radius:12px; padding:20px; box-shadow:0 8px 24px rgba(0,0,0,.08); }
-    .row { display:flex; gap:12px; }
-    label { display:block; font-size:14px; color:#444; margin-top:8px; }
-    input[type="text"], input[type="url"], input[type="password"], input[type="file"] {
-      width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;
-    }
-    button { padding:10px 14px; border:0; border-radius:8px; background:#0a66ff; color:#fff; cursor:pointer; }
-    button:hover { opacity:.9; }
-    .hidden { display:none; }
-    .video-list { margin-top:20px; display:grid; gap:10px; }
-    .video-item { display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; border-radius:8px; padding:10px; }
-    .actions { display:flex; gap:8px; }
+    body { font-family: sans-serif; background: #fafafa; padding: 2rem; }
+    h1, h2 { text-align: center; }
+    #admin-section { max-width: 600px; margin: 0 auto; }
+    input, button { width: 100%; padding: .5rem; margin-bottom: 1rem; }
+    img { max-width: 120px; border-radius: 6px; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>管理画面</h1>
+  <h1>管理者ページ</h1>
 
-    <!-- ログインパネル -->
-    <section id="login-panel">
-      <p>管理者パスワードを入力してください。</p>
-      <div class="row">
-        <input type="password" id="admin-password" placeholder="パスワード" />
-        <button id="login-btn">ログイン</button>
-      </div>
-      <small>※このページは認証済みの管理者のみが操作できます</small>
-      <hr>
-    </section>
+  <!-- パスワード入力セクション -->
+  <div id="login-section">
+    <p>管理者パスワードを入力してください：</p>
+    <input type="password" id="admin-password" placeholder="パスワード">
+    <button id="login-btn">ログイン</button>
+    <p id="login-error" style="color:red; display:none;">パスワードが違います。</p>
+  </div>
 
-    <!-- 操作パネル -->
-    <section id="app-panel" class="hidden">
-      <div class="row" style="justify-content:space-between; align-items:center;">
-        <h2 style="margin:0">動画登録</h2>
-        <button id="logout-btn" style="background:#777">ログアウト</button>
-      </div>
+  <!-- 管理画面 -->
+  <div id="admin-section" style="display:none;">
+    <h2>動画を追加</h2>
+    <form id="upload-form">
+      <label>タイトル</label>
+      <input type="text" id="title" required>
 
-      <form id="upload-form" style="margin-top:12px">
-        <label>タイトル</label>
-        <input type="text" id="title" required>
-        <label>動画URL</label>
-        <input type="url" id="link_url" required>
-        <label>サムネイル画像</label>
-        <input type="file" id="thumbnail" accept="image/*" required>
-        <div style="margin-top:12px"><button type="submit">登録する</button></div>
-      </form>
+      <label>動画URL</label>
+      <input type="url" id="link_url" required>
 
-      <h3 style="margin-top:24px">登録済み動画</h3>
-      <div id="video-list" class="video-list"></div>
-    </section>
+      <label>サムネイル画像</label>
+      <input type="file" id="thumbnail" accept="image/*" required>
+
+      <button type="submit">登録</button>
+    </form>
+
+    <h2>登録済み動画一覧</h2>
+    <div id="video-list"></div>
   </div>
 
   <script type="module" src="./src/admin.js"></script>
