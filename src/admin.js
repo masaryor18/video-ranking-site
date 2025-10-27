@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD  // ← ここが安全ポイント
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD // ← 安全に環境変数化
 
 // Supabaseクライアント作成
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -101,8 +101,24 @@ async function loadVideos() {
     list.appendChild(div)
   })
 
+  // --------------------
   // 削除処理
+  // --------------------
   document.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       if (confirm('本当に削除しますか？')) {
-        const
+        const id = btn.getAttribute('data-id')
+
+        try {
+          const { error } = await supabase.from('videos').delete().eq('id', id)
+          if (error) throw error
+          alert('削除しました')
+          loadVideos()
+        } catch (err) {
+          console.error(err)
+          alert('削除に失敗しました')
+        }
+      }
+    })
+  })
+}
