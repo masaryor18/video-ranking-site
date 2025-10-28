@@ -237,3 +237,117 @@ h1 {
     font-size: 1.1rem;
   }
 }
+/* ===============================
+   💻 管理者画面（動画一覧整列）
+================================ */
+.video-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #111;
+  border: 2px solid hotpink;
+  border-radius: 10px;
+  padding: 1rem;
+  margin: 1rem auto;
+  max-width: 800px;
+  color: pink;
+}
+
+.video-item img {
+  width: 240px;
+  height: auto;
+  border-radius: 8px;
+  margin-right: 1rem;
+}
+
+.video-item div {
+  flex: 1;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.video-item strong {
+  font-size: 1.2rem;
+  color: #ff69b4;
+}
+
+.video-item a {
+  color: #87CEFA;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.video-item a:hover {
+  text-decoration: underline;
+}
+
+.video-item button.delete-btn {
+  background: hotpink;
+  color: black;
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 1rem;
+  align-self: flex-start; /* ボタンを右寄せ */
+}
+
+.video-item button.delete-btn:hover {
+  background: #ff85c1;
+}
+/* ===============================
+   🧾 管理者ダッシュボード 登録フォーム
+================================ */
+#upload-form {
+  margin: 2rem auto;             /* 画面中央寄せ */
+  background: #000;              /* 背景を黒で統一 */
+  border: 2px solid hotpink;     /* ピンク枠 */
+  border-radius: 10px;
+  padding: 1.5rem;
+  max-width: 400px;              /* 横幅を固定して中央寄せ */
+  box-shadow: 0 0 20px rgba(255,105,180,0.5); /* 光るピンクの影 */
+  text-align: center;
+}
+
+#upload-form h3 {
+  color: #ff69b4;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+#upload-form label {
+  display: block;
+  margin-top: 0.6rem;
+  color: pink;
+}
+
+#upload-form input[type="text"],
+#upload-form input[type="file"] {
+  margin-top: 0.4rem;
+  margin-bottom: 0.8rem;
+  padding: 0.4rem;
+  width: 90%;
+  border-radius: 6px;
+  border: 1px solid hotpink;
+  background: #111;
+  color: white;
+}
+
+#upload-form button {
+  background: hotpink;
+  border: none;
+  color: black;
+  font-weight: bold;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+#upload-form button:hover {
+  background: #ff85c1;
+}
