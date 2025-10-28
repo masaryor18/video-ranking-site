@@ -1,60 +1,47 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>管理者画面</title>
-    <link rel="stylesheet" href="./src/style.css" />
-  </head>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理者画面</title>
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <h1>管理者ログイン</h1>
 
-  <body>
-    <h1>管理者ログイン</h1>
+  <!-- ログインフォーム -->
+  <section id="login-section">
+    <input id="admin-password" type="password" placeholder="パスワードを入力" />
+    <button id="login-btn">ログイン</button>
+    <p id="login-error" style="color: pink; display: none;"></p>
+  </section>
 
-    <!-- ログイン画面 -->
-    <div id="login-section">
-      <input type="password" id="admin-password" placeholder="パスワードを入力" />
-      <button id="login-btn">ログイン</button>
-      <p id="login-error" style="color:red;display:none;">パスワードが違います</p>
+  <!-- 管理者メイン -->
+  <section id="admin-section" style="display: none;">
+    <h2>管理者ダッシュボード</h2>
+
+    <!-- 新規登録フォーム -->
+    <form id="upload-form">
+      <h3>🎬 新規コンテンツ登録</h3>
+      <label>タイトル:</label>
+      <input id="title" type="text" required />
+      <label>リンクURL:</label>
+      <input id="link_url" type="text" required />
+      <label>サムネイル画像:</label>
+      <input id="thumbnail" type="file" accept="image/*" required />
+      <button type="submit">登録</button>
+    </form>
+
+    <!-- 並び替え -->
+    <div class="tabs">
+      <button id="sort-popular" class="active">人気順</button>
+      <button id="sort-latest">最新順</button>
     </div>
 
-    <!-- 管理者ダッシュボード（ログイン後のみ表示） -->
-    <div id="admin-section" style="display:none;">
-      <h2 style="color:#ff69b4;">管理者ダッシュボード</h2>
+    <!-- 一覧 -->
+    <div id="video-list"></div>
+  </section>
 
-      <!-- 新規コンテンツ登録フォーム -->
-      <div id="upload-form">
-        <h3>🎬 新規コンテンツ登録</h3>
-        <form id="upload-form-inner">
-          <label>タイトル:</label>
-          <input type="text" id="title" required><br>
-
-          <label>リンクURL:</label>
-          <input type="text" id="link_url" required><br>
-
-          <label>サムネイル画像:</label>
-          <input type="file" id="thumbnail" accept="image/*" required><br>
-
-          <button type="submit">登録</button>
-        </form>
-      </div>
-
-      <!-- 並び替えタブ -->
-      <div class="tabs">
-        <button id="sort-popular" class="active">人気順</button>
-        <button id="sort-latest">最新順</button>
-      </div>
-
-      <!-- 登録済み動画リスト -->
-      <div id="video-list"></div>
-
-      <!-- ページネーション -->
-      <div class="pagination">
-        <button id="prev-page">前へ</button>
-        <span id="page-num">1</span>
-        <button id="next-page">次へ</button>
-      </div>
-    </div>
-
-    <script type="module" src="./src/admin.js"></script>
-  </body>
+  <script src="./src/admin.js" type="module"></script>
+</body>
 </html>
