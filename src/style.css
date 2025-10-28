@@ -442,3 +442,11 @@ h1 {
 #upload-form button:hover {
   background: #ff85c1;
 }
+/* ===============================
+   📱 スマホ向け管理者画面サムネサイズ微調整
+================================ */
+@media (max-width: 767px) {
+  #admin-section .video img {
+    max-width: 100px; /* ← 現在より少し小さめ */
+  }
+}
