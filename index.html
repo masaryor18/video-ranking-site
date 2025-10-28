@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="./src/style.css">
 </head>
 
+
 <body>
   <!-- 年齢確認モーダル -->
   <div id="age-gate" class="age-gate">
@@ -18,75 +19,62 @@
     </div>
   </div>
 
-  <!-- ✅ 広告付きメイン構造（左右広告＋中央コンテンツ） -->
-  <div id="main-content" class="page-wrapper" style="display:none;">
-    <!-- 左広告 -->
-    <div id="ad-left" class="ad-column"></div>
-
-    <!-- メインエリア -->
-    <main>
-      <h1>動画ランキング</h1>
-
-      <!-- バナー広告 -->
-      <div id="banner-ad" class="banner-ad"></div>
-
-      <div class="tabs">
-        <button id="tab-popular" class="active">人気順</button>
-        <button id="tab-latest">最新</button>
-      </div>
-
-      <div id="video-list"></div>
-
-      <div class="pagination">
-        <button id="prev-btn">前へ</button>
-        <span id="page-number">1</span>
-        <button id="next-btn">次へ</button>
-      </div>
-    </main>
-
-    <!-- 右広告 -->
-    <div id="ad-right" class="ad-column"></div>
-  </div>
-
-  <!-- スクリプト -->
-  <script src="./src/main.js" type="module"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const path = window.location.pathname;
-      if (!path.endsWith('/index.html') && path !== '/') return;
-
-      const gate = document.getElementById('age-gate');
-      const main = document.getElementById('main-content');
-      if (!gate || !main) return;
-
-      const over18 = document.getElementById('over18');
-      const under18 = document.getElementById('under18');
-
-      if (over18) {
-        over18.addEventListener('click', () => {
-          gate.style.display = 'none';
-          main.style.display = 'flex'; // ← ここをflexに変更（中央構成が反映される）
-        });
-      }
-
-      if (under18) {
-        under18.addEventListener('click', () => {
-          window.location.href = '/under18.html';
-        });
-      }
-    });
-  </script>
-
-  <!-- ポップアップ広告 -->
-  <div id="popup-ad" class="popup-ad" aria-hidden="true">
-    <div class="popup-ad-content">
-      <button class="close-ad" aria-label="広告を閉じる">×</button>
-      <a href="https://al.fanza.co.jp/?lurl=https%3A%2F%2Fwww.dmm.co.jp%2Fdc%2Fdoujin%2F-%2Fdetail%2F%3D%2Fcid%3Dd_664981%2F&af_id=masaya18-004&ch=search_link&ch_id=package" rel="sponsored" target="_blank">
-        <img src="https://doujin-assets.dmm.co.jp/digital/comic/d_664981/d_664981pl.jpg" style="margin:0;padding:0;border:0;max-width:100%" />
-      </a>
+  <!-- ランキング本体 -->
+  <div id="main-content" style="display:none;">
+    <h1>動画ランキング</h1>
+<!-- バナー広告 -->
+<div id="banner-ad" class="banner-ad"></div> <!-- ここにJSで注入される -->
+    <div class="tabs">
+      <button id="tab-popular" class="active">人気順</button>
+      <button id="tab-latest">最新</button>
+    </div>
+    <div id="video-list"></div>
+    <div class="pagination">
+      <button id="prev-btn">前へ</button>
+      <span id="page-number">1</span>
+      <button id="next-btn">次へ</button>
     </div>
   </div>
 
+  <script src="./src/main.js" type="module"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // ✅ index.html 以外ではこのスクリプトを無効化する
+    const path = window.location.pathname;
+    if (!path.endsWith('/index.html') && path !== '/') {
+      return;
+    }
+
+    const gate = document.getElementById('age-gate');
+    const main = document.getElementById('main-content');
+    if (!gate || !main) return;
+
+    const over18 = document.getElementById('over18');
+    const under18 = document.getElementById('under18');
+
+    if (over18) {
+      over18.addEventListener('click', () => {
+        gate.style.display = 'none';
+        main.style.display = 'block';
+      });
+    }
+
+    if (under18) {
+      under18.addEventListener('click', () => {
+        window.location.href = '/under18.html';
+      });
+    }
+  });
+</script>
+
+  <div id="popup-ad" class="popup-ad" aria-hidden="true">
+  <div class="popup-ad-content">
+    <button class="close-ad" aria-label="広告を閉じる">×</button>
+    <a href="https://al.fanza.co.jp/?lurl=https%3A%2F%2Fwww.dmm.co.jp%2Fdc%2Fdoujin%2F-%2Fdetail%2F%3D%2Fcid%3Dd_664981%2F&af_id=masaya18-004&ch=search_link&ch_id=package" rel="sponsored" target="_blank"><img src="https://doujin-assets.dmm.co.jp/digital/comic/d_664981/d_664981pl.jpg" style="margin:0;padding:0;border:0;max-width:100%" /></a>
+  </div>
+</div>
+
+</body>
   <footer>
     <p>
       当サイトは18歳以上の方を対象としています。<br>
@@ -95,6 +83,7 @@
       閲覧は自己責任にてお願いいたします。
     </p>
 
+    <!-- 免責事項 -->
     <div class="disclaimer">
       <h3>【免責事項】</h3>
       <p>
@@ -111,5 +100,5 @@
       </p>
     </div>
   </footer>
-</body>
+
 </html>
