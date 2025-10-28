@@ -208,3 +208,32 @@ h1 {
     font-size: 1.1rem;
   }
 }
+/* ===============================
+   📱 スマホ向け（デフォルトサイズ調整）
+================================ */
+.video img {
+  max-width: 150px; /* ← 以前より少し大きめに */
+  border-radius: 6px;
+  transition: transform 0.2s ease;
+}
+
+/* ===============================
+   💻 PC向け（幅が広い画面）
+================================ */
+@media (min-width: 768px) {
+  .video img,
+  .video-item img {
+    max-width: 260px !important; /* ← !importantを追加して強制上書き */
+  }
+
+  .video,
+  .video-item {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+  }
+
+  .video-title {
+    font-size: 1.1rem;
+  }
+}
