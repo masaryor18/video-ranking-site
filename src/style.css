@@ -182,3 +182,29 @@ h1 {
   border-radius: 8px;      /* 角丸（不要なら削除OK） */
   box-shadow: 0 2px 8px rgba(0,0,0,0.2); /* ちょっと浮かせる影 */
 }
+
+/* ===============================
+   📱 スマホ向け（デフォルトサイズ）
+================================ */
+.video img {
+  max-width: 120px;
+  border-radius: 6px;
+  transition: transform 0.2s ease;
+}
+
+/* ===============================
+   💻 PC向け（幅が広い画面）
+================================ */
+@media (min-width: 768px) {
+  .video img {
+    max-width: 220px; /* ← PC時のサムネサイズを大きく */
+  }
+  .video {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .video-title {
+    font-size: 1.1rem;
+  }
+}
