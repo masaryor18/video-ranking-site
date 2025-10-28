@@ -1,117 +1,60 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>管理者画面</title>
-  <link rel="stylesheet" href="./src/style.css" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 1rem;
-      background-color: #f9f9f9;
-    }
-    .card {
-      background: #fff;
-      border: 2px solid #ddd;
-      border-radius: 10px;
-      padding: 1rem;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-    #login-section {
-      text-align: center;
-      margin-top: 10vh;
-    }
-    #admin-section {
-      display: none;
-    }
-    .tab-buttons {
-      margin-bottom: 1rem;
-    }
-    .tab-buttons button {
-      margin-right: .5rem;
-      padding: .5rem 1rem;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      background: #eee;
-      cursor: pointer;
-    }
-    .tab-buttons button.active {
-      background: #007bff;
-      color: white;
-      border-color: #007bff;
-    }
-    .pagination {
-      margin-top: 1rem;
-      text-align: center;
-    }
-    .pagination button {
-      margin: 0 .3rem;
-      padding: .4rem .8rem;
-      border-radius: 4px;
-      border: 1px solid #999;
-      background: #fff;
-      cursor: pointer;
-    }
-    .video-item {
-      background: #fff;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-      padding: .8rem;
-      margin-bottom: .6rem;
-    }
-    .video-item img {
-      max-width: 120px;
-      border-radius: 6px;
-    }
-  </style>
-</head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>管理者画面</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
 
-<body>
-  <!-- ログイン -->
-  <section id="login-section">
-    <h2>管理者ログイン</h2>
-    <input type="password" id="admin-password" placeholder="パスワードを入力" />
-    <button id="login-btn">ログイン</button>
-    <p id="login-error" style="display:none; color:red;">パスワードが違います</p>
-  </section>
+  <body>
+    <h1>管理者ログイン</h1>
 
-  <!-- 管理者画面 -->
-  <section id="admin-section">
-    <h1>管理者ダッシュボード</h1>
-
-    <!-- 登録フォーム -->
-    <div class="card">
-      <h2>🎬 新規コンテンツ登録</h2>
-      <form id="upload-form">
-        <label>タイトル:</label><br />
-        <input type="text" id="title" required /><br />
-        <label>リンクURL:</label><br />
-        <input type="url" id="link_url" required /><br />
-        <label>サムネイル画像:</label><br />
-        <input type="file" id="thumbnail" accept="image/*" required /><br /><br />
-        <button type="submit">登録</button>
-      </form>
+    <!-- ログイン画面 -->
+    <div id="login-section">
+      <input type="password" id="admin-password" placeholder="パスワードを入力" />
+      <button id="login-btn">ログイン</button>
+      <p id="login-error" style="color:red;display:none;">パスワードが違います</p>
     </div>
 
-    <!-- 並び替えボタン -->
-    <div class="tab-buttons">
-      <button id="tab-popular" class="active">人気順</button>
-      <button id="tab-latest">最新順</button>
+    <!-- 管理者ダッシュボード（ログイン後のみ表示） -->
+    <div id="admin-section" style="display:none;">
+      <h2 style="color:#ff69b4;">管理者ダッシュボード</h2>
+
+      <!-- 新規コンテンツ登録フォーム -->
+      <div id="upload-form">
+        <h3>🎬 新規コンテンツ登録</h3>
+        <form id="upload-form-inner">
+          <label>タイトル:</label>
+          <input type="text" id="title" required><br>
+
+          <label>リンクURL:</label>
+          <input type="text" id="link_url" required><br>
+
+          <label>サムネイル画像:</label>
+          <input type="file" id="thumbnail" accept="image/*" required><br>
+
+          <button type="submit">登録</button>
+        </form>
+      </div>
+
+      <!-- 並び替えタブ -->
+      <div class="tabs">
+        <button id="sort-popular" class="active">人気順</button>
+        <button id="sort-latest">最新順</button>
+      </div>
+
+      <!-- 登録済み動画リスト -->
+      <div id="video-list"></div>
+
+      <!-- ページネーション -->
+      <div class="pagination">
+        <button id="prev-page">前へ</button>
+        <span id="page-num">1</span>
+        <button id="next-page">次へ</button>
+      </div>
     </div>
 
-    <!-- 動画一覧 -->
-    <div id="video-list"></div>
-
-    <!-- ページネーション -->
-    <div class="pagination">
-      <button id="prev-btn">前へ</button>
-      <span id="page-info">1</span>
-      <button id="next-btn">次へ</button>
-    </div>
-  </section>
-
-  <script type="module" src="./src/admin.js"></script>
-</body>
+    <script type="module" src="./src/admin.js"></script>
+  </body>
 </html>

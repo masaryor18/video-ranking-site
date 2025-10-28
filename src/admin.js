@@ -1,20 +1,18 @@
-// src/admin.js
 import { createClient } from '@supabase/supabase-js'
 
+// ===============================
+// Supabase環境変数読み込み
+// ===============================
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-let currentTab = 'popular'
-let currentPage = 1
-const PAGE_SIZE = 20
-let cachedVideos = []
-
-// --------------------
+// ===============================
 // ログイン処理
-// --------------------
+// ===============================
 document.getElementById('login-btn').addEventListener('click', () => {
   const input = document.getElementById('admin-password').value
   const error = document.getElementById('login-error')
@@ -28,10 +26,51 @@ document.getElementById('login-btn').addEventListener('click', () => {
   }
 })
 
-// --------------------
-// 新規登録処理
-// --------------------
-document.getElementById('upload-form').addEventListener('submit', async (e) => {
+// ===============================
+// 設定・状態
+// ===============================
+let currentPage = 1
+const perPage = 20
+let sortMode = 'popular'
+
+// ===============================
+// 並び替えボタン
+// ===============================
+document.getElementById('sort-popular').addEventListener('click', () => {
+  sortMode = 'popular'
+  document.getElementById('sort-popular').classList.add('active')
+  document.getElementById('sort-latest').classList.remove('active')
+  currentPage = 1
+  loadVideos()
+})
+
+document.getElementById('sort-latest').addEventListener('click', () => {
+  sortMode = 'latest'
+  document.getElementById('sort-latest').classList.add('active')
+  document.getElementById('sort-popular').classList.remove('active')
+  currentPage = 1
+  loadVideos()
+})
+
+// ===============================
+// ページネーション
+// ===============================
+document.getElementById('prev-page').addEventListener('click', () => {
+  if (currentPage > 1) {
+    currentPage--
+    loadVideos()
+  }
+})
+
+document.getElementById('next-page').addEventListener('click', () => {
+  currentPage++
+  loadVideos()
+})
+
+// ===============================
+// コンテンツ登録処理
+// ===============================
+document.getElementById('upload-form-inner').addEventListener('submit', async (e) => {
   e.preventDefault()
 
   const title = document.getElementById('title').value
@@ -41,21 +80,31 @@ document.getElementById('upload-form').addEventListener('submit', async (e) => {
   if (!file) return alert('画像を選択してください')
 
   try {
+    // Storageへアップロード
     const fileName = `${Date.now()}-${file.name}`
-    const { error: uploadError } = await supabase.storage.from('thumbnails').upload(fileName, file)
+    const { error: uploadError } = await supabase.storage
+      .from('thumbnails')
+      .upload(fileName, file)
+
     if (uploadError) throw uploadError
 
-    const { data: { publicUrl } } = supabase.storage.from('thumbnails').getPublicUrl(fileName)
+    // 公開URL取得
+    const { data: { publicUrl } } = supabase
+      .storage
+      .from('thumbnails')
+      .getPublicUrl(fileName)
 
+    // DB登録
     const { error: insertError } = await supabase.from('videos').insert({
       title,
       link_url,
       thumbnail_url: publicUrl,
       created_at: new Date().toISOString()
     })
+
     if (insertError) throw insertError
 
-    alert('登録完了！')
+    alert('登録が完了しました！')
     e.target.reset()
     loadVideos()
   } catch (err) {
@@ -64,111 +113,68 @@ document.getElementById('upload-form').addEventListener('submit', async (e) => {
   }
 })
 
-// --------------------
-// 動画一覧取得・表示
-// --------------------
+// ===============================
+// 動画一覧読み込み
+// ===============================
 async function loadVideos() {
-  const orderBy = currentTab === 'popular' ? 'views' : 'created_at'
-  const ascending = currentTab === 'latest'
+  const list = document.getElementById('video-list')
+  list.innerHTML = '<p style="color:gray;">読み込み中...</p>'
 
-  const { data, error } = await supabase
-    .from('videos')
-    .select('*')
-    .order(orderBy, { ascending })
-  
+  let query = supabase.from('videos').select('*')
+
+  if (sortMode === 'latest') {
+    query = query.order('created_at', { ascending: false })
+  } else {
+    query = query.order('views', { ascending: false }) // 人気順（viewsカラム）
+  }
+
+  const from = (currentPage - 1) * perPage
+  const to = from + perPage - 1
+
+  const { data, error } = await query.range(from, to)
+
   if (error) {
     console.error(error)
-    alert('データ取得に失敗しました')
+    list.innerHTML = '<p style="color:red;">読み込みに失敗しました</p>'
     return
   }
 
-  cachedVideos = data
-  renderPage()
-}
+  if (!data.length) {
+    list.innerHTML = '<p style="color:gray;">登録された動画はありません。</p>'
+    return
+  }
 
-// --------------------
-// ページネーション表示
-// --------------------
-function renderPage() {
-  const list = document.getElementById('video-list')
   list.innerHTML = ''
-
-  const start = (currentPage - 1) * PAGE_SIZE
-  const pageItems = cachedVideos.slice(start, start + PAGE_SIZE)
-
-  if (!pageItems.length) {
-    list.textContent = 'データがありません。'
-    return
-  }
-
-  pageItems.forEach(v => {
+  data.forEach(v => {
     const div = document.createElement('div')
-    div.className = 'video-item'
+    div.classList.add('video-item')
     div.innerHTML = `
-      <img src="${v.thumbnail_url}" alt="thumb"><br>
-      <strong>${v.title}</strong><br>
-      <a href="${v.link_url}" target="_blank">${v.link_url}</a><br>
-      <button data-id="${v.id}" class="delete-btn">削除</button>
+      <img src="${v.thumbnail_url}" alt="thumb">
+      <div>
+        <strong>${v.title}</strong><br>
+        <a href="${v.link_url}" target="_blank">${v.link_url}</a><br>
+        <button data-id="${v.id}" class="delete-btn">削除</button>
+      </div>
     `
     list.appendChild(div)
   })
 
-  document.getElementById('page-info').textContent = `${currentPage} / ${Math.ceil(cachedVideos.length / PAGE_SIZE)}`
-  document.getElementById('prev-btn').disabled = currentPage === 1
-  document.getElementById('next-btn').disabled = currentPage * PAGE_SIZE >= cachedVideos.length
+  // ページ番号更新
+  document.getElementById('page-num').textContent = currentPage
 
-  // 削除処理
+  // 削除ボタン動作
   document.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       if (confirm('本当に削除しますか？')) {
-        const id = btn.dataset.id
-        try {
-          const { error } = await supabase.from('videos').delete().eq('id', id)
-          if (error) throw error
+        const id = btn.getAttribute('data-id')
+        const { error: deleteError } = await supabase.from('videos').delete().eq('id', id)
+        if (deleteError) {
+          alert('削除に失敗しました')
+        } else {
           alert('削除しました')
           loadVideos()
-        } catch (err) {
-          console.error(err)
-          alert('削除に失敗しました')
         }
       }
     })
   })
 }
-
-// --------------------
-// イベント
-// --------------------
-document.getElementById('prev-btn').addEventListener('click', () => {
-  if (currentPage > 1) {
-    currentPage--
-    renderPage()
-  }
-})
-
-document.getElementById('next-btn').addEventListener('click', () => {
-  if (currentPage * PAGE_SIZE < cachedVideos.length) {
-    currentPage++
-    renderPage()
-  }
-})
-
-document.getElementById('tab-popular').addEventListener('click', () => {
-  if (currentTab !== 'popular') {
-    currentTab = 'popular'
-    currentPage = 1
-    document.getElementById('tab-popular').classList.add('active')
-    document.getElementById('tab-latest').classList.remove('active')
-    loadVideos()
-  }
-})
-
-document.getElementById('tab-latest').addEventListener('click', () => {
-  if (currentTab !== 'latest') {
-    currentTab = 'latest'
-    currentPage = 1
-    document.getElementById('tab-latest').classList.add('active')
-    document.getElementById('tab-popular').classList.remove('active')
-    loadVideos()
-  }
-})
