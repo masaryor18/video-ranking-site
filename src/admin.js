@@ -13,18 +13,58 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 // ===============================
 // ログイン処理
 // ===============================
+// ===============================
+// ログイン処理（連続5回ミスで1時間ロック）
+// ===============================
 document.getElementById('login-btn').addEventListener('click', () => {
   const input = document.getElementById('admin-password').value
   const error = document.getElementById('login-error')
+  const now = Date.now()
 
+  const lockUntil = parseInt(localStorage.getItem('lockUntil') || '0')
+  let attempts = parseInt(localStorage.getItem('attempts') || '0')
+  let lastAttempt = parseInt(localStorage.getItem('lastAttempt') || '0')
+
+  // ロック中判定
+  if (lockUntil && now < lockUntil) {
+    const minutes = Math.ceil((lockUntil - now) / 60000)
+    error.textContent = `ロック中です。${minutes}分後に再試行できます。`
+    error.style.display = 'block'
+    return
+  }
+
+  // 10分以上空いたらリセット
+  if (now - lastAttempt > 10 * 60 * 1000) {
+    attempts = 0
+  }
+
+  // 照合
   if (input === ADMIN_PASSWORD) {
+    localStorage.removeItem('attempts')
+    localStorage.removeItem('lockUntil')
+    localStorage.removeItem('lastAttempt')
+    error.style.display = 'none'
     document.getElementById('login-section').style.display = 'none'
     document.getElementById('admin-section').style.display = 'block'
     loadVideos()
   } else {
+    attempts++
+    localStorage.setItem('attempts', attempts)
+    localStorage.setItem('lastAttempt', now)
+
+    if (attempts >= 5) {
+      const lockTime = now + 60 * 60 * 1000 // 1時間ロック
+      localStorage.setItem('lockUntil', lockTime)
+      localStorage.setItem('attempts', 0)
+      error.textContent = '5回連続で間違えたため、1時間ロックされました。'
+    } else {
+      const remaining = 5 - attempts
+      error.textContent = `パスワードが違います（あと${remaining}回でロック）`
+    }
     error.style.display = 'block'
   }
 })
+
 
 // ===============================
 // 設定・状態

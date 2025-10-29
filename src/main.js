@@ -102,27 +102,31 @@ async function onThumbClick(id, link){
 }
 
 /* --- 初期化 --- */
-async function loadAndRender(){
-  console.log(`📡 「${currentTab}」タブのデータを取得中...`)
+ async function loadAndRender(){
+-  // ① キャッシュを確認
+-  const cached = localStorage.getItem('videos')
++  // ① タブ別キャッシュキー
++  const cacheKey = `videos_${currentTab}`
++  const cached = localStorage.getItem(cacheKey)
 
-  const videos = await fetchVideos()
-  if (!videos || videos.length === 0) {
-    console.warn('❌ Supabase から動画データが取得できませんでした。')
-    cachedVideos = []
-  } else {
-    cachedVideos = videos
-  }
+   if (cached) {
+     console.log('✅ キャッシュから読み込みました')
+     cachedVideos = JSON.parse(cached)
+   } else {
+     console.log('🌐 Supabaseから新規取得')
+     cachedVideos = await fetchVideos()
+-    // ② キャッシュ保存（5分間だけ有効）
+-    localStorage.setItem('videos', JSON.stringify(cachedVideos))
+-    setTimeout(() => localStorage.removeItem('videos'), 5 * 60 * 1000)
++    // ② キャッシュ保存（5分間だけ有効）
++    localStorage.setItem(cacheKey, JSON.stringify(cachedVideos))
++    setTimeout(() => localStorage.removeItem(cacheKey), 5 * 60 * 1000)
+   }
 
-  // 並び替え処理（Supabase 側の RPC がうまくソートしていない場合の保険）
-  if (currentTab === 'popular') {
-    cachedVideos.sort((a, b) => (b.views ?? 0) - (a.views ?? 0))
-  } else if (currentTab === 'latest') {
-    cachedVideos.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-  }
+   currentPage = 1
+   render()
+ }
 
-  currentPage = 1
-  render()
-}
 
 
 /* --- イベントハンドラ登録 --- */
