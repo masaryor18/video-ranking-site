@@ -189,12 +189,15 @@ async function loadVideos() {
     const div = document.createElement('div')
     div.classList.add('video-item')
     div.innerHTML = `
-      <img src="${v.thumbnail_url}" alt="thumb">
-      <div>
-        <strong>${v.title}</strong><br>
-        <a href="${v.link_url}" target="_blank">${v.link_url}</a><br>
-        <button data-id="${v.id}" class="delete-btn">削除</button>
-      </div>
+  <img src="${v.thumbnail_url}" alt="thumb">
+  <div>
+    <strong>${v.title}</strong><br>
+    <a href="${v.link_url}" target="_blank">${v.link_url}</a><br>
+    <span style="color:#ccc;">再生回数：${v.views ?? 0}</span><br>
+    <button data-id="${v.id}" class="delete-btn">削除</button>
+  </div>
+`
+
     `
     list.appendChild(div)
   })
