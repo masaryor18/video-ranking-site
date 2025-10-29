@@ -20,12 +20,14 @@ const PAGE_SIZE = 10
 let cachedVideos = []
 
 /* --- ヘルパー --- */
-function escapeHTML(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[m]))}
+function escapeHTML(s){
+  if (!s) return ''
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;'}[m]))
+}
 
 /* --- データ取得 --- */
 async function fetchVideos(){
   try {
-    // RPCを呼び出して動画データを取得
     const { data, error } = await supabase.rpc('get_videos', { p_sort: currentTab })
     if (error) {
       console.error('fetchVideos error:', error)
@@ -44,6 +46,7 @@ function render(){
   listEl.innerHTML = ''
   const start = (currentPage - 1) * PAGE_SIZE
   const pageItems = cachedVideos.slice(start, start + PAGE_SIZE)
+
   if (pageItems.length === 0) {
     listEl.innerHTML = `<div style="color:var(--muted); text-align:center; padding:1rem;">表示できる動画がありません。</div>`
   } else {
@@ -81,18 +84,14 @@ function render(){
   document.getElementById('next-btn').disabled = currentPage * PAGE_SIZE >= cachedVideos.length
 }
 
-/* --- サムネクリック時（RPCを想定して安全にviewsを増やす） --- */
+/* --- サムネクリック時（views を安全に増やす） --- */
 async function onThumbClick(id, link){
   if (!link) return
-  // 新しいタブを先に開く（popup blocker 回避）
   window.open(link, '_blank', 'noopener')
 
   try {
-    // Supabase 側に RPC (increment_views) を作っている前提
-    // 例: create or replace function public.increment_views(p_id uuid) returns void ...
     const { error } = await supabase.rpc('increment_views', { p_id: id })
     if (error) console.error('increment error:', error)
-    // ローカルキャッシュを更新（見た目だけ更新）
     const idx = cachedVideos.findIndex(x => x.id === id)
     if (idx !== -1) cachedVideos[idx].views = (cachedVideos[idx].views ?? 0) + 1
     render()
@@ -102,32 +101,25 @@ async function onThumbClick(id, link){
 }
 
 /* --- 初期化 --- */
- async function loadAndRender(){
--  // ① キャッシュを確認
--  const cached = localStorage.getItem('videos')
-+  // ① タブ別キャッシュキー
-+  const cacheKey = `videos_${currentTab}`
-+  const cached = localStorage.getItem(cacheKey)
+async function loadAndRender(){
+  // ① タブ別キャッシュキー
+  const cacheKey = `videos_${currentTab}`
+  const cached = localStorage.getItem(cacheKey)
 
-   if (cached) {
-     console.log('✅ キャッシュから読み込みました')
-     cachedVideos = JSON.parse(cached)
-   } else {
-     console.log('🌐 Supabaseから新規取得')
-     cachedVideos = await fetchVideos()
--    // ② キャッシュ保存（5分間だけ有効）
--    localStorage.setItem('videos', JSON.stringify(cachedVideos))
--    setTimeout(() => localStorage.removeItem('videos'), 5 * 60 * 1000)
-+    // ② キャッシュ保存（5分間だけ有効）
-+    localStorage.setItem(cacheKey, JSON.stringify(cachedVideos))
-+    setTimeout(() => localStorage.removeItem(cacheKey), 5 * 60 * 1000)
-   }
+  if (cached) {
+    console.log('✅ キャッシュから読み込みました')
+    cachedVideos = JSON.parse(cached)
+  } else {
+    console.log('🌐 Supabaseから新規取得')
+    cachedVideos = await fetchVideos()
+    // ② キャッシュ保存（5分で失効）
+    localStorage.setItem(cacheKey, JSON.stringify(cachedVideos))
+    setTimeout(() => localStorage.removeItem(cacheKey), 5 * 60 * 1000)
+  }
 
-   currentPage = 1
-   render()
- }
-
-
+  currentPage = 1
+  render()
+}
 
 /* --- イベントハンドラ登録 --- */
 document.addEventListener('DOMContentLoaded', () => {
@@ -138,6 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('tab-latest').classList.remove('active')
     await loadAndRender()
   })
+
   document.getElementById('tab-latest').addEventListener('click', async () => {
     if (currentTab === 'latest') return
     currentTab = 'latest'
@@ -146,16 +139,21 @@ document.addEventListener('DOMContentLoaded', () => {
     await loadAndRender()
   })
 
-  document.getElementById('prev-btn').addEventListener('click', () => { if (currentPage > 1) { currentPage--; render() } })
-  document.getElementById('next-btn').addEventListener('click', () => { if (currentPage * PAGE_SIZE < cachedVideos.length) { currentPage++; render() } })
+  document.getElementById('prev-btn').addEventListener('click', () => {
+    if (currentPage > 1) { currentPage--; render() }
+  })
+  document.getElementById('next-btn').addEventListener('click', () => {
+    if (currentPage * PAGE_SIZE < cachedVideos.length) { currentPage++; render() }
+  })
 
   // popup ad
-showPopupAd(3000)  // ← 3秒後にポップアップを表示
+  showPopupAd(3000);
 
-const adContainer = document.getElementById('banner-ad');
+  const adContainer = document.getElementById('banner-ad')
   if (adContainer) {
-    adContainer.innerHTML = bannerAd;   // ads.js から読み込んだ広告を挿入
+    adContainer.innerHTML = bannerAd
   }
+
   // 初回ロード
   loadAndRender()
 })
