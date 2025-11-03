@@ -1,46 +1,47 @@
 // src/admin.js
 import { createClient } from '@supabase/supabase-js'
 
+// ===============================
+// Supabase 環境変数
+// ===============================
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.warn('VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY が未設定です。.env を確認してください。')
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
+// ===============================
+// 状態
+// ===============================
 let currentPage = 1
 const perPage = 20
 let sortMode = 'popular'
 
-/* ===============================
-   ログイン処理
-================================ */
-document.getElementById('login-btn')?.addEventListener('click', async () => {
-  const email = document.getElementById('admin-email').value
-  const password = document.getElementById('admin-password').value
-  const errorEl = document.getElementById('login-error')
+// ===============================
+// ログイン処理
+// ===============================
+document.getElementById('login-btn')?.addEventListener('click', () => {
+  const input = document.getElementById('admin-password').value
+  const error = document.getElementById('login-error')
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-  if (error) {
-    console.error(error)
-    errorEl.style.display = 'block'
-    return
+  if (input === ADMIN_PASSWORD) {
+    error.style.display = 'none'
+    document.getElementById('login-section').style.display = 'none'
+    document.getElementById('admin-section').style.display = 'block'
+    loadVideos()
+  } else {
+    error.textContent = 'パスワードが違います'
+    error.style.display = 'block'
   }
-
-  document.getElementById('login-section').style.display = 'none'
-  document.getElementById('admin-section').style.display = 'block'
-  loadVideos()
 })
 
-/* ===============================
-   ログアウト処理
-================================ */
-document.getElementById('logout-btn')?.addEventListener('click', async () => {
-  await supabase.auth.signOut()
-  location.reload()
-})
-
-/* ===============================
-   ページネーションとソート
-================================ */
+// ===============================
+// 並び替え
+// ===============================
 document.getElementById('sort-popular')?.addEventListener('click', () => {
   sortMode = 'popular'
   document.getElementById('sort-popular').classList.add('active')
@@ -57,46 +58,55 @@ document.getElementById('sort-latest')?.addEventListener('click', () => {
   loadVideos()
 })
 
+// ===============================
+// ページネーション
+// ===============================
 document.getElementById('prev-page')?.addEventListener('click', () => {
   if (currentPage > 1) {
     currentPage--
     loadVideos()
   }
 })
+
 document.getElementById('next-page')?.addEventListener('click', () => {
   currentPage++
   loadVideos()
 })
 
-/* ===============================
-   コンテンツ登録処理（認証付き）
-================================ */
+// ===============================
+// コンテンツ登録
+// ===============================
 document.getElementById('upload-form-inner')?.addEventListener('submit', async (e) => {
   e.preventDefault()
 
-  const user = (await supabase.auth.getUser()).data.user
-  if (!user) {
-    alert('認証が必要です')
+  const title = document.getElementById('title').value.trim()
+  const link_url = document.getElementById('link_url').value.trim()
+  const file = document.getElementById('thumbnail').files[0]
+
+  if (!file) {
+    alert('画像を選択してください')
     return
   }
 
-  const title = document.getElementById('title').value
-  const link_url = document.getElementById('link_url').value
-  const file = document.getElementById('thumbnail').files[0]
-
-  if (!file) return alert('画像を選択してください')
-
   try {
-    const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${Date.now()}.${fileExt}`
+    const filePath = `uploads/${fileName}`
 
     const { error: uploadError } = await supabase.storage
       .from('thumbnails')
-      .upload(fileName, file, { cacheControl: '3600', upsert: false })
+      .upload(filePath, file, {
+        contentType: file.type || 'image/jpeg',
+        upsert: false
+      })
 
     if (uploadError) throw uploadError
 
-    const { data: pub } = supabase.storage.from('thumbnails').getPublicUrl(fileName)
-    const publicUrl = pub?.publicUrl ?? ''
+    const { data: pub } = supabase.storage
+      .from('thumbnails')
+      .getPublicUrl(filePath)
+
+    const publicUrl = pub?.publicUrl || ''
 
     const { error: insertError } = await supabase.from('videos').insert({
       title,
@@ -110,19 +120,22 @@ document.getElementById('upload-form-inner')?.addEventListener('submit', async (
     e.target.reset()
     loadVideos()
   } catch (err) {
-    console.error(err)
+    console.error('❌ アップロードエラー:', err)
     alert('アップロードに失敗しました')
   }
 })
 
-/* ===============================
-   動画一覧取得・描画
-================================ */
+// ===============================
+// 動画一覧表示
+// ===============================
 async function loadVideos() {
   const list = document.getElementById('video-list')
+  if (!list) return
+
   list.innerHTML = '<p style="color:gray;">読み込み中...</p>'
 
   let query = supabase.from('videos').select('*')
+
   if (sortMode === 'latest') {
     query = query.order('created_at', { ascending: false })
   } else {
@@ -134,39 +147,44 @@ async function loadVideos() {
   const { data, error } = await query.range(from, to)
 
   if (error) {
-    console.error(error)
+    console.error('❌ 取得エラー:', error)
     list.innerHTML = '<p style="color:red;">読み込みに失敗しました</p>'
     return
   }
 
-  if (!data || !data.length) {
-    list.innerHTML = '<p style="color:gray;">動画がありません。</p>'
+  if (!data || data.length === 0) {
+    list.innerHTML = '<p style="color:gray;">登録された動画はありません。</p>'
+    document.getElementById('page-num').textContent = String(currentPage)
     return
   }
 
   list.innerHTML = ''
   data.forEach(v => {
     const div = document.createElement('div')
-    div.classList.add('video-item')
+    div.className = 'video-item'
     div.innerHTML = `
       <img src="${v.thumbnail_url}" alt="thumb">
       <div>
-        <strong>${escapeHTML(v.title)}</strong><br>
-        <a href="${escapeAttr(v.link_url)}" target="_blank">${escapeHTML(v.link_url)}</a><br>
-        <span style="color:#999;">再生回数: ${v.views ?? 0}</span><br>
-        <button class="delete-btn" data-id="${v.id}">削除</button>
+        <strong>${escapeHTML(v.title || '')}</strong><br>
+        <a href="${escapeAttr(v.link_url || '')}" target="_blank">${escapeHTML(v.link_url || '')}</a><br>
+        <span style="color:#ccc;">再生回数：${Number(v.views ?? 0)}</span><br>
+        <button data-id="${v.id}" class="delete-btn">削除</button>
       </div>
     `
     list.appendChild(div)
   })
 
+  document.getElementById('page-num').textContent = String(currentPage)
+
   document.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      const id = btn.dataset.id
       if (!confirm('本当に削除しますか？')) return
+      const id = btn.dataset.id?.trim()
+      console.log('🗑️ 削除対象:', id)
+
       const { error: delErr } = await supabase.from('videos').delete().eq('id', id)
       if (delErr) {
-        console.error(delErr)
+        console.error('❌ 削除エラー:', delErr)
         alert('削除に失敗しました')
       } else {
         alert('削除しました')
@@ -174,25 +192,16 @@ async function loadVideos() {
       }
     })
   })
-
-  document.getElementById('page-num').textContent = currentPage
 }
 
+// ===============================
+// エスケープ関数
+// ===============================
 function escapeHTML(s) {
-  return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]))
+  return String(s).replace(/[&<>"']/g, m =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])
+  )
 }
 function escapeAttr(s) {
   return String(s).replace(/"/g, '&quot;')
 }
-
-/* ===============================
-   起動時: ログイン済みならダッシュボードへ
-================================ */
-;(async () => {
-  const { data } = await supabase.auth.getUser()
-  if (data?.user) {
-    document.getElementById('login-section').style.display = 'none'
-    document.getElementById('admin-section').style.display = 'block'
-    loadVideos()
-  }
-})()
