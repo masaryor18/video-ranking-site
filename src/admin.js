@@ -2,45 +2,70 @@
 import { createClient } from '@supabase/supabase-js'
 
 // ===============================
-// Supabase 環境変数
+// Supabase 設定（安全版）
 // ===============================
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD
-
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.warn('❗VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY が未設定です。.env を確認してください。')
-}
-
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL  // ← .envに登録しておく
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 // ===============================
-// 状態
+// 状態管理
 // ===============================
 let currentPage = 1
 const perPage = 20
 let sortMode = 'popular'
+let failedAttempts = 0
+const MAX_ATTEMPTS = 5
 
 // ===============================
-// ログイン処理
+// ログイン処理（Supabase Auth使用）
 // ===============================
-document.getElementById('login-btn')?.addEventListener('click', () => {
-  const input = document.getElementById('admin-password').value
+document.getElementById('login-btn')?.addEventListener('click', async () => {
+  const password = document.getElementById('admin-password').value.trim()
   const error = document.getElementById('login-error')
+  const attemptsEl = document.getElementById('login-attempts')
 
-  if (input === ADMIN_PASSWORD) {
+  // ロックチェック
+  const lockUntil = localStorage.getItem('lockUntil')
+  if (lockUntil && Date.now() < Number(lockUntil)) {
+    error.textContent = 'ロック中です。しばらくしてからお試しください。'
+    error.style.display = 'block'
+    return
+  }
+
+  // Supabase Authでログイン試行
+  const { error: loginError } = await supabase.auth.signInWithPassword({
+    email: ADMIN_EMAIL,
+    password
+  })
+
+  if (!loginError) {
+    console.log('✅ ログイン成功')
     error.style.display = 'none'
+    failedAttempts = 0
+    attemptsEl.textContent = `試行回数: 0 / ${MAX_ATTEMPTS}`
     document.getElementById('login-section').style.display = 'none'
     document.getElementById('admin-section').style.display = 'block'
     loadVideos()
   } else {
-    error.textContent = 'パスワードが違います'
+    console.warn('❌ ログイン失敗:', loginError)
+    failedAttempts++
+    attemptsEl.textContent = `試行回数: ${failedAttempts} / ${MAX_ATTEMPTS}`
+
+    if (failedAttempts >= MAX_ATTEMPTS) {
+      const lockTime = Date.now() + 60 * 60 * 1000 // 1時間ロック
+      localStorage.setItem('lockUntil', lockTime)
+      error.textContent = '5回間違えたため、1時間ロックされます。'
+    } else {
+      error.textContent = 'パスワードが違います。'
+    }
     error.style.display = 'block'
   }
 })
 
 // ===============================
-// 並び替えボタン
+// 並び替え
 // ===============================
 document.getElementById('sort-popular')?.addEventListener('click', () => {
   sortMode = 'popular'
@@ -74,11 +99,10 @@ document.getElementById('next-page')?.addEventListener('click', () => {
 })
 
 // ===============================
-// コンテンツ登録（Storage + videos へ Insert）
+// コンテンツ登録
 // ===============================
 document.getElementById('upload-form-inner')?.addEventListener('submit', async (e) => {
   e.preventDefault()
-
   const title = document.getElementById('title').value.trim()
   const link_url = document.getElementById('link_url').value.trim()
   const file = document.getElementById('thumbnail').files[0]
@@ -89,18 +113,17 @@ document.getElementById('upload-form-inner')?.addEventListener('submit', async (
   }
 
   try {
-    // ✅ ファイル名をURL安全文字に変換（Invalid key 対策）
-    const safeFileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9_.-]/g, '_')}`
-
+    const ext = file.name.split('.').pop()
+    const fileName = `${Date.now()}.${ext}`
     const { error: uploadError } = await supabase.storage
       .from('thumbnails')
-      .upload(safeFileName, file)
+      .upload(`uploads/${fileName}`, file)
 
     if (uploadError) throw uploadError
 
     const { data: pub } = supabase.storage
       .from('thumbnails')
-      .getPublicUrl(safeFileName)
+      .getPublicUrl(`uploads/${fileName}`)
 
     const publicUrl = pub?.publicUrl || ''
 
@@ -108,22 +131,22 @@ document.getElementById('upload-form-inner')?.addEventListener('submit', async (
       title,
       link_url,
       thumbnail_url: publicUrl,
-      created_at: new Date().toISOString(),
-      views: 0
+      created_at: new Date().toISOString()
     })
+
     if (insertError) throw insertError
 
-    alert('✅ 登録が完了しました！')
+    alert('登録が完了しました！')
     e.target.reset()
     loadVideos()
   } catch (err) {
-    console.error('Upload Error:', err)
-    alert('アップロードに失敗しました。コンソールを確認してください。')
+    console.error('❌ アップロードエラー:', err)
+    alert('アップロードに失敗しました')
   }
 })
 
 // ===============================
-// 動画一覧の取得＆描画
+// 動画一覧読み込み
 // ===============================
 async function loadVideos() {
   const list = document.getElementById('video-list')
@@ -131,7 +154,6 @@ async function loadVideos() {
   list.innerHTML = '<p style="color:gray;">読み込み中...</p>'
 
   let query = supabase.from('videos').select('*')
-
   if (sortMode === 'latest') {
     query = query.order('created_at', { ascending: false })
   } else {
@@ -143,7 +165,7 @@ async function loadVideos() {
   const { data, error } = await query.range(from, to)
 
   if (error) {
-    console.error('loadVideos error:', error)
+    console.error('❌ 取得エラー:', error)
     list.innerHTML = '<p style="color:red;">読み込みに失敗しました</p>'
     return
   }
@@ -172,13 +194,13 @@ async function loadVideos() {
 
   document.getElementById('page-num').textContent = String(currentPage)
 
-  // 削除ボタンの動作
   document.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       if (!confirm('本当に削除しますか？')) return
-      const id = btn.getAttribute('data-id')
-      const { error: delError } = await supabase.from('videos').delete().eq('id', id)
-      if (delError) {
+      const id = btn.dataset.id?.trim()
+      const { error: delErr } = await supabase.from('videos').delete().eq('id', id)
+      if (delErr) {
+        console.error('❌ 削除エラー:', delErr)
         alert('削除に失敗しました')
       } else {
         alert('削除しました')
@@ -192,11 +214,10 @@ async function loadVideos() {
 // エスケープ関数
 // ===============================
 function escapeHTML(s) {
-  return String(s).replace(/[&<>"']/g, m => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[m]))
+  return String(s).replace(/[&<>"']/g, m =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])
+  )
 }
-
 function escapeAttr(s) {
   return String(s).replace(/"/g, '&quot;')
 }

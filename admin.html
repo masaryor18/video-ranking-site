@@ -10,41 +10,43 @@
   <body>
     <h1>管理者ログイン</h1>
 
-    <!-- ログイン画面 -->
+    <!-- ログインセクション -->
     <div id="login-section">
-      <input type="password" id="admin-password" placeholder="パスワードを入力" />
+      <p>パスワードを入力してください。</p>
+      <input type="password" id="admin-password" placeholder="パスワード" />
       <button id="login-btn">ログイン</button>
-      <p id="login-error" style="color:red;display:none;">パスワードが違います</p>
+      <p id="login-error" style="color:red;display:none;"></p>
+      <p id="login-attempts" style="color:gray;">試行回数: 0 / 5</p>
     </div>
 
     <!-- 管理者ダッシュボード -->
     <div id="admin-section" style="display:none;">
       <h2 style="color:#ff69b4;">管理者ダッシュボード</h2>
 
-      <!-- 新規登録フォーム -->
+      <!-- 新規コンテンツ登録 -->
       <div id="upload-form">
         <h3>🎬 新規コンテンツ登録</h3>
         <form id="upload-form-inner">
-          <label>タイトル:</label>
-          <input type="text" id="title" required><br>
+          <label>タイトル:</label><br />
+          <input type="text" id="title" required /><br />
 
-          <label>リンクURL:</label>
-          <input type="text" id="link_url" required><br>
+          <label>リンクURL:</label><br />
+          <input type="text" id="link_url" required /><br />
 
-          <label>サムネイル画像:</label>
-          <input type="file" id="thumbnail" accept="image/*" required><br>
+          <label>サムネイル画像:</label><br />
+          <input type="file" id="thumbnail" accept="image/*" required /><br />
 
           <button type="submit">登録</button>
         </form>
       </div>
 
-      <!-- 並び替え -->
+      <!-- 並び替えタブ -->
       <div class="tabs">
         <button id="sort-popular" class="active">人気順</button>
         <button id="sort-latest">最新順</button>
       </div>
 
-      <!-- 一覧 -->
+      <!-- 動画リスト -->
       <div id="video-list"></div>
 
       <!-- ページネーション -->
