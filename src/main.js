@@ -6,6 +6,8 @@ import { showPopupAd } from './popup_ad.js'
 /* --- 環境変数（Vite 経由） --- */
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+const CF_ZONE_ID = import.meta.env.VITE_CF_ZONE_ID
+const CF_API_TOKEN = import.meta.env.VITE_CF_API_TOKEN
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.warn('VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY が設定されていません。.env を確認してください。')
@@ -19,29 +21,61 @@ let currentPage = 1
 const PAGE_SIZE = 10
 let cachedVideos = []
 
-/* --- ヘルパー --- */
-function escapeHTML(s){
+/* --- Cloudflare キャッシュ削除（対象URLのみ） --- */
+async function purgeCacheForFile(fileUrl) {
+  if (!CF_ZONE_ID || !CF_API_TOKEN || !fileUrl) {
+    console.warn('⚠️ purge skipped: Cloudflare設定またはURLが不足しています')
+    return
+  }
+  try {
+    const res = await fetch(`https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/purge_cache`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${CF_API_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ files: [fileUrl] })
+    })
+    const json = await res.json()
+    if (json.success) {
+      console.log(`🧹 Cloudflareキャッシュ削除成功: ${fileUrl}`)
+    } else {
+      console.warn('⚠️ Cloudflareキャッシュ削除失敗:', json)
+    }
+  } catch (err) {
+    console.error('❌ purgeCacheForFile エラー:', err)
+  }
+}
+
+/* --- HTMLエスケープ --- */
+function escapeHTML(s) {
   if (!s) return ''
-  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;'}[m]))
+  return String(s).replace(/[&<>"']/g, m => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[m]))
 }
 
 /* --- データ取得 --- */
-async function fetchVideos(){
+async function fetchVideos() {
   try {
     const { data, error } = await supabase.rpc('get_videos', { p_sort: currentTab })
     if (error) {
       console.error('fetchVideos error:', error)
       return []
     }
+    // サムネイルURLがあれば都度パージ（古いキャッシュ防止）
+    for (const v of data || []) {
+      if (v.thumbnail_url) await purgeCacheForFile(v.thumbnail_url)
+    }
     return data || []
-  } catch(e){
+  } catch (e) {
     console.error('fetchVideos exception:', e)
     return []
   }
 }
 
 /* --- レンダリング --- */
-function render(){
+function render() {
   const listEl = document.getElementById('video-list')
   listEl.innerHTML = ''
   const start = (currentPage - 1) * PAGE_SIZE
@@ -85,7 +119,7 @@ function render(){
 }
 
 /* --- サムネクリック時（views を安全に増やす） --- */
-async function onThumbClick(id, link){
+async function onThumbClick(id, link) {
   if (!link) return
   window.open(link, '_blank', 'noopener')
 
@@ -95,14 +129,13 @@ async function onThumbClick(id, link){
     const idx = cachedVideos.findIndex(x => x.id === id)
     if (idx !== -1) cachedVideos[idx].views = (cachedVideos[idx].views ?? 0) + 1
     render()
-  } catch(e){
+  } catch (e) {
     console.error('onThumbClick exception:', e)
   }
 }
 
 /* --- 初期化 --- */
-async function loadAndRender(){
-  // ① タブ別キャッシュキー
+async function loadAndRender() {
   const cacheKey = `videos_${currentTab}`
   const cached = localStorage.getItem(cacheKey)
 
@@ -112,7 +145,6 @@ async function loadAndRender(){
   } else {
     console.log('🌐 Supabaseから新規取得')
     cachedVideos = await fetchVideos()
-    // ② キャッシュ保存（5分で失効）
     localStorage.setItem(cacheKey, JSON.stringify(cachedVideos))
     setTimeout(() => localStorage.removeItem(cacheKey), 5 * 60 * 1000)
   }
@@ -146,14 +178,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentPage * PAGE_SIZE < cachedVideos.length) { currentPage++; render() }
   })
 
-  // popup ad
-  showPopupAd(3000);
-
+  showPopupAd(3000)
   const adContainer = document.getElementById('banner-ad')
-  if (adContainer) {
-    adContainer.innerHTML = bannerAd
-  }
+  if (adContainer) adContainer.innerHTML = bannerAd
 
-  // 初回ロード
   loadAndRender()
 })

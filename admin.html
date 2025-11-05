@@ -1,62 +1,176 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>管理者画面</title>
-    <link rel="stylesheet" href="./src/style.css" />
-  </head>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理者画面 | 動画ランキングサイト</title>
+  <link rel="icon" href="/favicon.ico" />
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #121212;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
 
-  <body>
-    <h1>管理者ログイン</h1>
+    h1 {
+      text-align: center;
+      margin-top: 1rem;
+      color: #00c3ff;
+    }
 
-    <!-- ログインセクション -->
-    <div id="login-section">
-      <p>パスワードを入力してください。</p>
-      <input type="password" id="admin-password" placeholder="パスワード" />
-      <button id="login-btn">ログイン</button>
-      <p id="login-error" style="color:red;display:none;"></p>
-      <p id="login-attempts" style="color:gray;">試行回数: 0 / 5</p>
+    #login-section, #admin-section {
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 1.5rem;
+      background: #1e1e1e;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+
+    input, button, textarea {
+      width: 100%;
+      padding: 0.6rem;
+      margin-top: 0.5rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+    }
+
+    button {
+      background: #00c3ff;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #009edb;
+    }
+
+    #login-error {
+      color: #ff5c5c;
+      display: none;
+      margin-top: 0.5rem;
+      font-weight: bold;
+    }
+
+    #login-attempts {
+      color: #ccc;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+
+    .tabs button {
+      width: 45%;
+    }
+
+    .active {
+      background: #0077ff;
+    }
+
+    #video-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .video-item {
+      background: #222;
+      padding: 0.8rem;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .video-item img {
+      width: 100%;
+      border-radius: 6px;
+      object-fit: cover;
+    }
+
+    .video-item button {
+      margin-top: 0.5rem;
+      background: #e74c3c;
+    }
+
+    .pagination {
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .pagination button {
+      width: auto;
+      margin: 0 0.5rem;
+    }
+
+    form#upload-form-inner {
+      margin-top: 1rem;
+      background: #181818;
+      padding: 1rem;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>管理者画面</h1>
+
+  <!-- ============================= -->
+  <!-- ログイン -->
+  <!-- ============================= -->
+  <section id="login-section">
+    <h2>ログイン</h2>
+    <p>管理者パスワードを入力してください。</p>
+    <input type="password" id="admin-password" placeholder="パスワード" />
+    <button id="login-btn">ログイン</button>
+    <p id="login-error"></p>
+    <p id="login-attempts">試行回数: 0 / 5</p>
+  </section>
+
+  <!-- ============================= -->
+  <!-- 管理者メイン画面 -->
+  <!-- ============================= -->
+  <section id="admin-section" style="display: none;">
+    <div class="tabs">
+      <button id="sort-popular" class="active">人気順</button>
+      <button id="sort-latest">新着順</button>
     </div>
 
-    <!-- 管理者ダッシュボード -->
-    <div id="admin-section" style="display:none;">
-      <h2 style="color:#ff69b4;">管理者ダッシュボード</h2>
+    <div id="video-list"></div>
 
-      <!-- 新規コンテンツ登録 -->
-      <div id="upload-form">
-        <h3>🎬 新規コンテンツ登録</h3>
-        <form id="upload-form-inner">
-          <label>タイトル:</label><br />
-          <input type="text" id="title" required /><br />
-
-          <label>リンクURL:</label><br />
-          <input type="text" id="link_url" required /><br />
-
-          <label>サムネイル画像:</label><br />
-          <input type="file" id="thumbnail" accept="image/*" required /><br />
-
-          <button type="submit">登録</button>
-        </form>
-      </div>
-
-      <!-- 並び替えタブ -->
-      <div class="tabs">
-        <button id="sort-popular" class="active">人気順</button>
-        <button id="sort-latest">最新順</button>
-      </div>
-
-      <!-- 動画リスト -->
-      <div id="video-list"></div>
-
-      <!-- ページネーション -->
-      <div class="pagination">
-        <button id="prev-page">前へ</button>
-        <span id="page-num">1</span>
-        <button id="next-page">次へ</button>
-      </div>
+    <div class="pagination">
+      <button id="prev-page">前へ</button>
+      <span id="page-num">1</span>
+      <button id="next-page">次へ</button>
     </div>
 
-    <script type="module" src="./src/admin.js"></script>
-  </body>
+    <hr style="margin:2rem 0;border:0;border-top:1px solid #333;" />
+
+    <h2>新規コンテンツ登録</h2>
+    <form id="upload-form-inner">
+      <label>タイトル</label>
+      <input type="text" id="title" placeholder="動画タイトル" required />
+
+      <label>リンクURL</label>
+      <input type="url" id="link_url" placeholder="https://..." required />
+
+      <label>サムネイル画像</label>
+      <input type="file" id="thumbnail" accept="image/*" required />
+
+      <button type="submit">登録する</button>
+    </form>
+  </section>
+
+  <script type="module" src="/src/admin.js"></script>
+</body>
 </html>
