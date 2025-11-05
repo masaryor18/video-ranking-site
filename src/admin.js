@@ -2,12 +2,14 @@
 import { createClient } from '@supabase/supabase-js'
 
 // ===============================
-// Supabase 設定（安全版）
+// Supabase 設定
 // ===============================
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL  // ← .envに登録しておく
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true }
+})
 
 // ===============================
 // 状態管理
@@ -19,14 +21,14 @@ let failedAttempts = 0
 const MAX_ATTEMPTS = 5
 
 // ===============================
-// ログイン処理（Supabase Auth使用）
+// ログイン処理
 // ===============================
 document.getElementById('login-btn')?.addEventListener('click', async () => {
   const password = document.getElementById('admin-password').value.trim()
   const error = document.getElementById('login-error')
   const attemptsEl = document.getElementById('login-attempts')
 
-  // ロックチェック
+  // ロック中チェック
   const lockUntil = localStorage.getItem('lockUntil')
   if (lockUntil && Date.now() < Number(lockUntil)) {
     error.textContent = 'ロック中です。しばらくしてからお試しください。'
@@ -34,13 +36,13 @@ document.getElementById('login-btn')?.addEventListener('click', async () => {
     return
   }
 
-  // Supabase Authでログイン試行
-  const { error: loginError } = await supabase.auth.signInWithPassword({
+  // 認証処理
+  const { data, error: loginError } = await supabase.auth.signInWithPassword({
     email: ADMIN_EMAIL,
     password
   })
 
-  if (!loginError) {
+  if (!loginError && data?.session) {
     console.log('✅ ログイン成功')
     error.style.display = 'none'
     failedAttempts = 0
@@ -52,9 +54,8 @@ document.getElementById('login-btn')?.addEventListener('click', async () => {
     console.warn('❌ ログイン失敗:', loginError)
     failedAttempts++
     attemptsEl.textContent = `試行回数: ${failedAttempts} / ${MAX_ATTEMPTS}`
-
     if (failedAttempts >= MAX_ATTEMPTS) {
-      const lockTime = Date.now() + 60 * 60 * 1000 // 1時間ロック
+      const lockTime = Date.now() + 60 * 60 * 1000
       localStorage.setItem('lockUntil', lockTime)
       error.textContent = '5回間違えたため、1時間ロックされます。'
     } else {
@@ -65,7 +66,23 @@ document.getElementById('login-btn')?.addEventListener('click', async () => {
 })
 
 // ===============================
-// 並び替え
+// セッション維持監視
+// ===============================
+supabase.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN') {
+    console.log('✅ セッション確立')
+    document.getElementById('login-section').style.display = 'none'
+    document.getElementById('admin-section').style.display = 'block'
+    loadVideos()
+  } else if (event === 'SIGNED_OUT') {
+    console.log('🚪 ログアウト')
+    document.getElementById('login-section').style.display = 'block'
+    document.getElementById('admin-section').style.display = 'none'
+  }
+})
+
+// ===============================
+// 並び替えボタン
 // ===============================
 document.getElementById('sort-popular')?.addEventListener('click', () => {
   sortMode = 'popular'
@@ -107,24 +124,23 @@ document.getElementById('upload-form-inner')?.addEventListener('submit', async (
   const link_url = document.getElementById('link_url').value.trim()
   const file = document.getElementById('thumbnail').files[0]
 
-  if (!file) {
-    alert('画像を選択してください')
-    return
-  }
+  if (!file) return alert('画像を選択してください')
 
   try {
+    const user = (await supabase.auth.getUser()).data.user
+    if (!user) return alert('再ログインしてください')
+
     const ext = file.name.split('.').pop()
     const fileName = `${Date.now()}.${ext}`
     const { error: uploadError } = await supabase.storage
       .from('thumbnails')
-      .upload(`uploads/${fileName}`, file)
+      .upload(`uploads/${fileName}`, file, { upsert: false })
 
     if (uploadError) throw uploadError
 
     const { data: pub } = supabase.storage
       .from('thumbnails')
       .getPublicUrl(`uploads/${fileName}`)
-
     const publicUrl = pub?.publicUrl || ''
 
     const { error: insertError } = await supabase.from('videos').insert({
@@ -146,12 +162,19 @@ document.getElementById('upload-form-inner')?.addEventListener('submit', async (
 })
 
 // ===============================
-// 動画一覧読み込み
+// 動画一覧
 // ===============================
 async function loadVideos() {
   const list = document.getElementById('video-list')
   if (!list) return
   list.innerHTML = '<p style="color:gray;">読み込み中...</p>'
+
+  const { data: sessionData } = await supabase.auth.getSession()
+  if (!sessionData?.session) {
+    console.warn('⚠️ セッションなし（未ログイン状態）')
+    list.innerHTML = '<p style="color:red;">ログインしてください。</p>'
+    return
+  }
 
   let query = supabase.from('videos').select('*')
   if (sortMode === 'latest') {
@@ -170,9 +193,8 @@ async function loadVideos() {
     return
   }
 
-  if (!data || data.length === 0) {
+  if (!data?.length) {
     list.innerHTML = '<p style="color:gray;">登録された動画はありません。</p>'
-    document.getElementById('page-num').textContent = String(currentPage)
     return
   }
 
@@ -192,12 +214,10 @@ async function loadVideos() {
     list.appendChild(div)
   })
 
-  document.getElementById('page-num').textContent = String(currentPage)
-
   document.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       if (!confirm('本当に削除しますか？')) return
-      const id = btn.dataset.id?.trim()
+      const id = btn.dataset.id
       const { error: delErr } = await supabase.from('videos').delete().eq('id', id)
       if (delErr) {
         console.error('❌ 削除エラー:', delErr)
