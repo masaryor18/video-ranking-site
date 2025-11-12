@@ -352,9 +352,29 @@ h1 {
   background: #ff85c1;
 }
 
-.video img {
-  width: 480px;
-  height: 270px;
+/* ===============================
+   🎬 サムネイル統一サイズ（縦横比16:9固定）
+================================ */
+.video img,
+.video-item img {
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 16 / 9; /* ← W480×H270の比率を維持 */
   object-fit: cover;
   border-radius: 6px;
+  margin: 0 auto;
+  display: block;
+}
+
+/* ===============================
+   📱 スマホ向け調整
+================================ */
+@media (max-width: 767px) {
+  .video img,
+  .video-item img {
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
 }
