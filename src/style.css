@@ -351,3 +351,10 @@ h1 {
 #upload-form button:hover {
   background: #ff85c1;
 }
+
+.video img {
+  width: 480px;
+  height: 270px;
+  object-fit: cover;
+  border-radius: 6px;
+}

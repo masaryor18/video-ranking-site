@@ -2,14 +2,11 @@
 import { createClient } from '@supabase/supabase-js'
 
 // ===============================
-// Supabase + Cloudflare 設定
+// Supabase 設定
 // ===============================
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL
-const CF_ZONE_ID = import.meta.env.VITE_CF_ZONE_ID
-const CF_API_TOKEN = import.meta.env.VITE_CF_API_TOKEN
-
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 // ===============================
@@ -22,32 +19,7 @@ let failedAttempts = 0
 const MAX_ATTEMPTS = 5
 
 // ===============================
-// Cloudflare キャッシュパージ関数（対象URLのみ）
-// ===============================
-async function purgeCacheForFile(fileUrl) {
-  try {
-    const res = await fetch(`https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/purge_cache`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${CF_API_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ files: [fileUrl] })
-    })
-
-    const json = await res.json()
-    if (json.success) {
-      console.log(`🧹 Cloudflareキャッシュ削除成功: ${fileUrl}`)
-    } else {
-      console.warn('⚠️ Cloudflareキャッシュ削除失敗:', json)
-    }
-  } catch (err) {
-    console.error('❌ purgeCacheForFile エラー:', err)
-  }
-}
-
-// ===============================
-// ログイン（Supabase Auth）
+// ログイン
 // ===============================
 document.getElementById('login-btn')?.addEventListener('click', async () => {
   const password = document.getElementById('admin-password').value.trim()
@@ -91,42 +63,36 @@ document.getElementById('login-btn')?.addEventListener('click', async () => {
 })
 
 // ===============================
-// 並び替え
+// 画像リサイズ関数
 // ===============================
-document.getElementById('sort-popular')?.addEventListener('click', () => {
-  sortMode = 'popular'
-  document.getElementById('sort-popular').classList.add('active')
-  document.getElementById('sort-latest').classList.remove('active')
-  currentPage = 1
-  loadVideos()
-})
-document.getElementById('sort-latest')?.addEventListener('click', () => {
-  sortMode = 'latest'
-  document.getElementById('sort-latest').classList.add('active')
-  document.getElementById('sort-popular').classList.remove('active')
-  currentPage = 1
-  loadVideos()
-})
+async function resizeImage(file, maxWidth = 480, maxHeight = 270) {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
 
-// ===============================
-// ページネーション
-// ===============================
-document.getElementById('prev-page')?.addEventListener('click', () => {
-  if (currentPage > 1) {
-    currentPage--
-    loadVideos()
-  }
-})
-document.getElementById('next-page')?.addEventListener('click', () => {
-  currentPage++
-  loadVideos()
-})
+    img.onload = () => {
+      let width = img.width
+      let height = img.height
+      const ratio = Math.min(maxWidth / width, maxHeight / height)
+      width = Math.round(width * ratio)
+      height = Math.round(height * ratio)
+      canvas.width = width
+      canvas.height = height
+      ctx.drawImage(img, 0, 0, width, height)
+      canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.85)
+    }
+
+    img.src = URL.createObjectURL(file)
+  })
+}
 
 // ===============================
 // コンテンツ登録
 // ===============================
 document.getElementById('upload-form-inner')?.addEventListener('submit', async (e) => {
   e.preventDefault()
+
   const title = document.getElementById('title').value.trim()
   const link_url = document.getElementById('link_url').value.trim()
   const file = document.getElementById('thumbnail').files[0]
@@ -137,31 +103,29 @@ document.getElementById('upload-form-inner')?.addEventListener('submit', async (
   }
 
   try {
-    const ext = file.name.split('.').pop()
-    const fileName = `${Date.now()}.${ext}`
-    const filePath = `uploads/${fileName}`
+    const resizedBlob = await resizeImage(file)
+    const fileName = `${Date.now()}.jpg`
 
     const { error: uploadError } = await supabase.storage
       .from('thumbnails')
-      .upload(filePath, file)
-
+      .upload(`uploads/${fileName}`, resizedBlob, {
+        contentType: 'image/jpeg',
+        upsert: false
+      })
     if (uploadError) throw uploadError
 
     const { data: pub } = supabase.storage
       .from('thumbnails')
-      .getPublicUrl(filePath)
-
+      .getPublicUrl(`uploads/${fileName}`)
     const publicUrl = pub?.publicUrl || ''
+
     const { error: insertError } = await supabase.from('videos').insert({
       title,
       link_url,
       thumbnail_url: publicUrl,
       created_at: new Date().toISOString()
     })
-
     if (insertError) throw insertError
-
-    await purgeCacheForFile(publicUrl) // 🔥 対象URLキャッシュ削除
 
     alert('登録が完了しました！')
     e.target.reset()
@@ -173,7 +137,7 @@ document.getElementById('upload-form-inner')?.addEventListener('submit', async (
 })
 
 // ===============================
-// 動画一覧読み込み
+// 動画一覧
 // ===============================
 async function loadVideos() {
   const list = document.getElementById('video-list')
@@ -181,25 +145,15 @@ async function loadVideos() {
   list.innerHTML = '<p style="color:gray;">読み込み中...</p>'
 
   let query = supabase.from('videos').select('*')
-  if (sortMode === 'latest') {
-    query = query.order('created_at', { ascending: false })
-  } else {
-    query = query.order('views', { ascending: false }).order('created_at', { ascending: false })
-  }
+  query =
+    sortMode === 'latest'
+      ? query.order('created_at', { ascending: false })
+      : query.order('views', { ascending: false }).order('created_at', { ascending: false })
 
-  const from = (currentPage - 1) * perPage
-  const to = from + perPage - 1
-  const { data, error } = await query.range(from, to)
-
+  const { data, error } = await query.range((currentPage - 1) * perPage, currentPage * perPage - 1)
   if (error) {
     console.error('❌ 取得エラー:', error)
     list.innerHTML = '<p style="color:red;">読み込みに失敗しました</p>'
-    return
-  }
-
-  if (!data || data.length === 0) {
-    list.innerHTML = '<p style="color:gray;">登録された動画はありません。</p>'
-    document.getElementById('page-num').textContent = String(currentPage)
     return
   }
 
@@ -213,26 +167,21 @@ async function loadVideos() {
         <strong>${escapeHTML(v.title || '')}</strong><br>
         <a href="${escapeAttr(v.link_url || '')}" target="_blank">${escapeHTML(v.link_url || '')}</a><br>
         <span style="color:#ccc;">再生回数：${Number(v.views ?? 0)}</span><br>
-        <button data-id="${v.id}" data-url="${v.thumbnail_url}" class="delete-btn">削除</button>
+        <button data-id="${v.id}" class="delete-btn">削除</button>
       </div>
     `
     list.appendChild(div)
   })
 
-  document.getElementById('page-num').textContent = String(currentPage)
-
   document.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       if (!confirm('本当に削除しますか？')) return
       const id = btn.dataset.id
-      const thumbUrl = btn.dataset.url
-
       const { error: delErr } = await supabase.from('videos').delete().eq('id', id)
       if (delErr) {
         console.error('❌ 削除エラー:', delErr)
         alert('削除に失敗しました')
       } else {
-        await purgeCacheForFile(thumbUrl) // 🔥 画像キャッシュ削除
         alert('削除しました')
         loadVideos()
       }
@@ -241,7 +190,7 @@ async function loadVideos() {
 }
 
 // ===============================
-// XSS対策
+// エスケープ関数
 // ===============================
 function escapeHTML(s) {
   return String(s).replace(/[&<>"']/g, m =>
