@@ -6,8 +6,6 @@ import { showPopupAd } from './popup_ad.js'
 /* --- 環境変数（Vite 経由） --- */
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
-const CF_ZONE_ID = import.meta.env.VITE_CF_ZONE_ID
-const CF_API_TOKEN = import.meta.env.VITE_CF_API_TOKEN
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.warn('VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY が設定されていません。.env を確認してください。')
@@ -21,61 +19,37 @@ let currentPage = 1
 const PAGE_SIZE = 10
 let cachedVideos = []
 
-/* --- Cloudflare キャッシュ削除（対象URLのみ） --- */
-async function purgeCacheForFile(fileUrl) {
-  if (!CF_ZONE_ID || !CF_API_TOKEN || !fileUrl) {
-    console.warn('⚠️ purge skipped: Cloudflare設定またはURLが不足しています')
-    return
-  }
-  try {
-    const res = await fetch(`https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/purge_cache`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${CF_API_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ files: [fileUrl] })
-    })
-    const json = await res.json()
-    if (json.success) {
-      console.log(`🧹 Cloudflareキャッシュ削除成功: ${fileUrl}`)
-    } else {
-      console.warn('⚠️ Cloudflareキャッシュ削除失敗:', json)
-    }
-  } catch (err) {
-    console.error('❌ purgeCacheForFile エラー:', err)
-  }
-}
-
-/* --- HTMLエスケープ --- */
-function escapeHTML(s) {
+/* --- ヘルパー --- */
+function escapeHTML(s){
   if (!s) return ''
   return String(s).replace(/[&<>"']/g, m => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;'
   }[m]))
 }
 
 /* --- データ取得 --- */
-async function fetchVideos() {
+async function fetchVideos(){
   try {
     const { data, error } = await supabase.rpc('get_videos', { p_sort: currentTab })
     if (error) {
       console.error('fetchVideos error:', error)
       return []
     }
-    // サムネイルURLがあれば都度パージ（古いキャッシュ防止）
-    for (const v of data || []) {
-      if (v.thumbnail_url) await purgeCacheForFile(v.thumbnail_url)
-    }
     return data || []
-  } catch (e) {
+  } catch(e){
     console.error('fetchVideos exception:', e)
     return []
   }
 }
 
+/* --- サムネイル・タイトルクリック時：同一タブで遷移 --- */
+function goToLink(url){
+  if (!url) return
+  window.location.href = url   // ← ここが重要！（同一タブ遷移）
+}
+
 /* --- レンダリング --- */
-function render() {
+function render(){
   const listEl = document.getElementById('video-list')
   listEl.innerHTML = ''
   const start = (currentPage - 1) * PAGE_SIZE
@@ -84,23 +58,33 @@ function render() {
   if (pageItems.length === 0) {
     listEl.innerHTML = `<div style="color:var(--muted); text-align:center; padding:1rem;">表示できる動画がありません。</div>`
   } else {
+
     for (const v of pageItems) {
-      const thumb = v.thumbnail_url && v.thumbnail_url.trim() !== '' ? v.thumbnail_url : 'https://via.placeholder.com/120x90?text=No+Image'
+      const thumb = v.thumbnail_url && v.thumbnail_url.trim() !== ''
+        ? v.thumbnail_url
+        : 'https://via.placeholder.com/480x270?text=No+Image'
+
       const card = document.createElement('div')
       card.className = 'video'
 
+      /* --- サムネイル --- */
       const img = document.createElement('img')
       img.src = thumb
       img.alt = escapeHTML(v.title || 'thumbnail')
-      img.tabIndex = 0
-      img.addEventListener('click', () => onThumbClick(v.id, v.link_url))
-      img.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onThumbClick(v.id, v.link_url) } })
 
+      img.addEventListener('click', () => goToLink(v.link_url))
+
+      /* --- タイトル --- */
       const meta = document.createElement('div')
       meta.style.flex = '1 1 auto'
+
       const title = document.createElement('div')
       title.className = 'video-title'
       title.textContent = v.title || '無題'
+      title.style.cursor = 'pointer'
+
+      title.addEventListener('click', () => goToLink(v.link_url))
+
       const views = document.createElement('div')
       views.className = 'video-meta'
       views.textContent = `${v.views ?? 0} 回再生`
@@ -118,24 +102,8 @@ function render() {
   document.getElementById('next-btn').disabled = currentPage * PAGE_SIZE >= cachedVideos.length
 }
 
-/* --- サムネクリック時（views を安全に増やす） --- */
-async function onThumbClick(id, link) {
-  if (!link) return
-  window.open(link, '_blank', 'noopener')
-
-  try {
-    const { error } = await supabase.rpc('increment_views', { p_id: id })
-    if (error) console.error('increment error:', error)
-    const idx = cachedVideos.findIndex(x => x.id === id)
-    if (idx !== -1) cachedVideos[idx].views = (cachedVideos[idx].views ?? 0) + 1
-    render()
-  } catch (e) {
-    console.error('onThumbClick exception:', e)
-  }
-}
-
 /* --- 初期化 --- */
-async function loadAndRender() {
+async function loadAndRender(){
   const cacheKey = `videos_${currentTab}`
   const cached = localStorage.getItem(cacheKey)
 
@@ -153,7 +121,7 @@ async function loadAndRender() {
   render()
 }
 
-/* --- イベントハンドラ登録 --- */
+/* --- イベント --- */
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('tab-popular').addEventListener('click', async () => {
     if (currentTab === 'popular') return
@@ -179,6 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
   })
 
   showPopupAd(3000)
+
   const adContainer = document.getElementById('banner-ad')
   if (adContainer) adContainer.innerHTML = bannerAd
 
