@@ -361,3 +361,44 @@ h1 {
 #upload-form button:hover {
   background: #ff85c1;
 }
+/* ===============================
+   💻 PC版レイアウトを管理者画面と同じにする
+================================ */
+@media (min-width: 768px) {
+  .video {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    max-width: 800px;
+  }
+
+  .video img {
+    width: 480px;
+    height: 270px;
+    flex-shrink: 0;
+    border-radius: 6px;
+    object-fit: cover;
+  }
+
+  .video div {
+    flex: 1;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .video-title {
+    font-size: 1.1rem;
+    margin-bottom: 0.4rem;
+    color: #ff69b4;
+  }
+
+  .video-meta {
+    font-size: 0.9rem;
+    color: #ccc;
+  }
+}
