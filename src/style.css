@@ -1,5 +1,5 @@
 /* ===============================
-   🌐 共通デザイン
+   🌙 共通デザイン
 ================================ */
 body {
   background-color: black;
@@ -13,11 +13,11 @@ body {
 h1 {
   margin: 1rem 0;
   font-size: 2rem;
-  color: #FF1493;
+  color: #FF1493; /* Deep Pink */
 }
 
 /* ===============================
-   🏷 タブ
+   🟣 タブ
 ================================ */
 .tabs {
   margin: 1rem 0;
@@ -39,45 +39,47 @@ h1 {
 }
 
 /* ===============================
-   🎬 エンドユーザ画面 — 動画リスト
-   ※サムネイルは常に16:9に統一
+   🎬 エンドユーザー動画カード
+   （PC：サムネイル 480x270 / 16:9）
 ================================ */
 .video {
   display: flex;
   align-items: flex-start;
-  gap: 0.8rem;
-  width: 90%;
-  max-width: 600px;
+  border: 1px solid hotpink;
   margin: 0.6rem auto;
   padding: 0.6rem;
+  width: 90%;
+  max-width: 600px;
+  gap: 0.8rem;
   background: #000;
-  border: 1px solid hotpink;
-  border-radius: 6px;
 }
 
+/* サムネイル固定サイズ（PC） */
 .video img {
-  flex-shrink: 0;
-  width: 100%;
-  max-width: 480px;
+  width: 480px !important;   /* ここで 480×270 を固定 */
+  height: 270px !important;
   aspect-ratio: 16 / 9;
   object-fit: cover;
   border-radius: 6px;
   background: #111;
+  flex-shrink: 0;
+  margin-right: 0;           /* 余白は gap で管理 */
 }
 
+/* テキスト側 */
 .video div {
   flex: 1;
+  text-align: left;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  text-align: left;
   color: pink;
 }
 
 .video-title {
   font-weight: bold;
-  color: #FF1493;
   margin-bottom: 0.3rem;
+  color: #FF1493;
   font-size: 1rem;
 }
 
@@ -87,30 +89,32 @@ h1 {
 }
 
 /* ===============================
-   📱 スマホ レスポンシブ
+   📱 スマホ最適化（1カラム＆横幅100%）
 ================================ */
 @media (max-width: 767px) {
   .video {
     flex-direction: column;
+    align-items: center;
     text-align: center;
-    padding: 0.5rem;
     width: 100%;
+    padding: 0.5rem;
+    gap: 0.5rem;
   }
 
   .video img {
-    max-width: 100%;
-    width: 100%;
+    width: 100% !important;    /* 画面幅いっぱい */
+    height: auto !important;   /* 高さは比率から自動 */
     aspect-ratio: 16 / 9;
+    margin: 0 auto;
   }
 
   .video div {
     text-align: center;
-    margin-top: 0.4rem;
   }
 }
 
 /* ===============================
-   📄 ページネーション
+   🔢 ページネーション
 ================================ */
 .pagination {
   margin: 1rem 0;
@@ -127,24 +131,7 @@ h1 {
 }
 
 /* ===============================
-   🪧 バナー広告
-================================ */
-.banner-ad {
-  margin: 1rem auto;
-  text-align: center;
-  max-width: 600px;
-  width: 90%;
-}
-
-.banner-ad img {
-  width: 100%;
-  height: auto;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-
-/* ===============================
-   🪧 広告ポップアップ
+   📢 ポップアップ広告
 ================================ */
 .popup-ad {
   display: none;
@@ -153,28 +140,32 @@ h1 {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.6); /* 半透明の黒背景 */
   justify-content: center;
   align-items: center;
   z-index: 1000;
 }
 
 .popup-ad-content {
-  position: relative;
+  position: relative;          /* ❌ボタンの基準 */
   background: #fff;
   padding: 1rem;
   border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
   text-align: center;
   max-width: 90%;
   max-height: 90%;
 }
 
+/* 広告画像 */
 .popup-ad-content img {
   width: 600px;
+  max-width: 100%;
   height: auto;
   border-radius: 8px;
 }
 
+/* 閉じるボタン */
 .close-ad {
   position: absolute;
   top: 8px;
@@ -188,7 +179,7 @@ h1 {
 }
 
 /* ===============================
-   🔞 年齢確認モーダル
+   📛 年齢確認モーダル
 ================================ */
 .age-gate {
   position: fixed;
@@ -221,7 +212,7 @@ h1 {
 }
 
 /* ===============================
-   📘 免責事項
+   📜 免責事項
 ================================ */
 .disclaimer {
   font-size: 0.85rem;
@@ -234,31 +225,49 @@ h1 {
 .disclaimer h3 {
   font-size: 1rem;
   margin-top: 1rem;
-  color: #d63384;
+  color: #d63384; /* 濃いピンク系 */
 }
 
 /* ===============================
-   🛠 管理者画面（サムネ16:9統一）
+   🖼 バナー広告
+================================ */
+.banner-ad {
+  margin: 1rem auto;
+  text-align: center;
+  max-width: 600px;
+  width: 90%;
+}
+
+.banner-ad img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* ===============================
+   🎥 管理者画面：動画一覧
 ================================ */
 .video-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   background: #111;
   border: 2px solid hotpink;
   border-radius: 10px;
   padding: 1rem;
   margin: 1rem auto;
   max-width: 800px;
+  gap: 1rem;
   color: pink;
 }
 
+/* 管理者用サムネイルも16:9に統一 */
 .video-item img {
   width: 240px;
-  aspect-ratio: 16 / 9;
+  height: auto;
+  aspect-ratio: 16/9;
   object-fit: cover;
   border-radius: 8px;
-  margin-right: 1rem;
 }
 
 .video-item div {
@@ -266,6 +275,7 @@ h1 {
   text-align: left;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 0.3rem;
 }
 
@@ -280,6 +290,10 @@ h1 {
   word-break: break-all;
 }
 
+.video-item a:hover {
+  text-decoration: underline;
+}
+
 .video-item button.delete-btn {
   background: hotpink;
   color: black;
@@ -289,4 +303,61 @@ h1 {
   font-weight: bold;
   cursor: pointer;
   align-self: flex-start;
+}
+
+.video-item button.delete-btn:hover {
+  background: #ff85c1;
+}
+
+/* ===============================
+   🧾 管理者ダッシュボード 登録フォーム
+================================ */
+#upload-form {
+  margin: 2rem auto;
+  background: #000;
+  border: 2px solid hotpink;
+  border-radius: 10px;
+  padding: 1.5rem;
+  max-width: 400px;
+  box-shadow: 0 0 20px rgba(255,105,180,0.5);
+  text-align: center;
+}
+
+#upload-form h3 {
+  color: #ff69b4;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+#upload-form label {
+  display: block;
+  margin-top: 0.6rem;
+  color: pink;
+}
+
+#upload-form input[type="text"],
+#upload-form input[type="file"] {
+  margin-top: 0.4rem;
+  margin-bottom: 0.8rem;
+  padding: 0.4rem;
+  width: 90%;
+  border-radius: 6px;
+  border: 1px solid hotpink;
+  background: #111;
+  color: white;
+}
+
+#upload-form button {
+  background: hotpink;
+  border: none;
+  color: black;
+  font-weight: bold;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+#upload-form button:hover {
+  background: #ff85c1;
 }
