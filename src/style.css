@@ -402,3 +402,10 @@ h1 {
     color: #ccc;
   }
 }
+
+/* 📱 スマホ下部広告のため、下に余白 */
+@media (max-width: 767px) {
+  body {
+    padding-bottom: 70px;
+  }
+}
