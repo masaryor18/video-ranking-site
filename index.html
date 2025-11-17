@@ -122,6 +122,31 @@
   <!-- JS -->
   <script type="module" src="./src/main.js"></script>
   <script type="module" src="./src/popup_ad.js"></script>
+  <script>
+document.addEventListener('DOMContentLoaded', () => {
+  const gate = document.getElementById('age-gate');
+  const main = document.getElementById('main-content');
+
+  if (!gate || !main) return;
+
+  const over18 = document.getElementById('over18');
+  const under18 = document.getElementById('under18');
+
+  if (over18) {
+    over18.addEventListener('click', () => {
+      gate.style.display = 'none';
+      main.style.display = 'block';
+    });
+  }
+
+  if (under18) {
+    under18.addEventListener('click', () => {
+      window.location.href = '/under18.html';
+    });
+  }
+});
+</script>
+
 
 </body>
 
