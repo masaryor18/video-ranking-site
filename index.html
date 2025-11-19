@@ -7,28 +7,26 @@
   <!-- JuicyAds site verification -->
   <meta name="juicyads-site-verification" content="54e04330261fcf6d65461ff2bc00eba0">
 
-<meta name="ppck-ver" content="31fbd1896b0c5f4c17e80549ee13d3ae" />
-
   <title>動画ランキングサイト</title>
   <link rel="stylesheet" href="./src/style.css">
 
-  <!-- JuicyAds loader（必須：1回だけ読み込む） -->
+  <!-- JuicyAds loader（1回だけでOK）-->
   <script async data-cfasync="false" src="https://poweredby.jads.co/js/jads.js"></script>
 
   <style>
-    /* PC上部広告（728×90） */
+    /* PC 上部（728×90） */
     #ad-desktop-top { display: none; }
     @media (min-width: 768px) {
-      #ad-desktop-top { display: block; margin: 0 auto; text-align: center; }
+      #ad-desktop-top { display: block; text-align:center; margin: 0 auto; }
     }
 
-    /* スマホ上部広告（300×250） */
-    #ad-mobile-top { display: block; text-align: center; }
+    /* スマホ上部（300×250） */
+    #ad-mobile-top { text-align:center; }
     @media (min-width: 768px) {
-      #ad-mobile-top { display: none; }
+      #ad-mobile-top { display:none; }
     }
 
-    /* スマホ下部広告（300×50） */
+    /* スマホ下部（300×50固定） */
     #ad-mobile-bottom {
       display: block;
       position: fixed;
@@ -40,15 +38,16 @@
       z-index: 9999;
     }
     @media (min-width: 768px) {
-      #ad-mobile-bottom { display: none; }
+      #ad-mobile-bottom { display:none; }
     }
   </style>
 </head>
 
+
 <body>
 
   <!-- ===============================
-        🍎 PC 上部広告（728×90）
+        🍎 PC 上部バナー（728×90）
   ================================ -->
   <div id="ad-desktop-top">
     <ins id="1105281" data-width="728" data-height="90"></ins>
@@ -56,32 +55,34 @@
   </div>
 
   <!-- ===============================
-        🍎 スマホ 上部広告（300×250）
+        🍎 スマホ 上部（300×250）
   ================================ -->
   <div id="ad-mobile-top">
     <ins id="1105282" data-width="300" data-height="250"></ins>
     <script>(adsbyjuicy = window.adsbyjuicy || []).push({'adzone':1105282});</script>
   </div>
 
+
   <!-- ===============================
-        🍎 年齢確認モーダル
+         🟣 年齢確認モーダル
   ================================ -->
   <div id="age-gate" class="age-gate">
     <div class="age-gate-content">
       <h2>年齢確認</h2>
-      <p>このサイトは18歳以上を対象としています。あなたの年齢を選択してください。</p>
+      <p>このサイトは18歳以上を対象としています。</p>
       <button id="over18">18歳以上</button>
       <button id="under18">18歳未満</button>
     </div>
   </div>
 
+
   <!-- ===============================
-        🍎 ランキング本体
+         🎬 ランキング本体
   ================================ -->
   <div id="main-content" style="display:none;">
     <h1>動画ランキング</h1>
 
-    <!-- バナー広告（ads.jsで注入） -->
+    <!--（JSでバナー挿入される場所を残すなら↓）-->
     <div id="banner-ad" class="banner-ad"></div>
 
     <div class="tabs">
@@ -98,83 +99,101 @@
     </div>
   </div>
 
+
   <!-- ===============================
-        🍎 スマホ下部広告（300×50）
+        🍎 スマホ 下部（300×50）
   ================================ -->
   <div id="ad-mobile-bottom">
     <ins id="1105283" data-width="300" data-height="50"></ins>
     <script>(adsbyjuicy = window.adsbyjuicy || []).push({'adzone':1105283});</script>
   </div>
 
-<!-- ===============================
-      🍎 ポップアップ広告（300×250）
-=============================== -->
-<div id="popup-ad" class="popup-ad" aria-hidden="true">
-  <div class="popup-ad-content">
-    <button class="close-ad" aria-label="広告を閉じる">×</button>
 
-    <!-- ここにJSで広告が挿入される -->
-    <div id="popup-ad-slot"></div>
+  <!-- ===============================
+         💥 ポップアップ広告（300×250）
+  ================================ -->
+  <div id="popup-ad" class="popup-ad" aria-hidden="true">
+    <div class="popup-ad-content">
+      <button class="close-ad" aria-label="広告を閉じる">×</button>
+
+      <!-- ここに popup_ad.js が挿入 -->
+      <div id="popup-ad-slot"></div>
+    </div>
   </div>
-</div>
 
 
-
-  <!-- JS -->
+  <!-- ===============================
+         🟣 メインスクリプト
+  ================================ -->
   <script type="module" src="./src/main.js"></script>
   <script type="module" src="./src/popup_ad.js"></script>
+
+  <!-- ===============================
+         💥 PopCash（ポップアンダー）
+  ================================ -->
+  <script type="text/javascript">
+    var uid = '497160';
+    var wid = '748715';
+    var pop_tag = document.createElement('script');
+    pop_tag.src='//cdn.popcash.net/show.js';
+    document.body.appendChild(pop_tag);
+    pop_tag.onerror = function() {
+      pop_tag = document.createElement('script');
+      pop_tag.src='//cdn2.popcash.net/show.js';
+      document.body.appendChild(pop_tag);
+    };
+  </script>
+
+
+  <!-- ===============================
+         📝 18禁判定スクリプト
+  ================================ -->
   <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const gate = document.getElementById('age-gate');
-  const main = document.getElementById('main-content');
+    document.addEventListener('DOMContentLoaded', () => {
 
-  if (!gate || !main) return;
+      const path = window.location.pathname;
+      if (!path.endsWith('/index.html') && path !== '/') return;
 
-  const over18 = document.getElementById('over18');
-  const under18 = document.getElementById('under18');
+      const gate = document.getElementById('age-gate');
+      const main = document.getElementById('main-content');
 
-  if (over18) {
-    over18.addEventListener('click', () => {
-      gate.style.display = 'none';
-      main.style.display = 'block';
+      const over18 = document.getElementById('over18');
+      const under18 = document.getElementById('under18');
+
+      if (over18) {
+        over18.addEventListener('click', () => {
+          gate.style.display = 'none';
+          main.style.display = 'block';
+        });
+      }
+
+      if (under18) {
+        under18.addEventListener('click', () => {
+          window.location.href = '/under18.html';
+        });
+      }
     });
-  }
+  </script>
 
-  if (under18) {
-    under18.addEventListener('click', () => {
-      window.location.href = '/under18.html';
-    });
-  }
-});
-</script>
 
+  <!-- ===============================
+         📝 フッター（免責）
+  ================================ -->
+  <footer>
+    <p>
+      当サイトは18歳以上の方を対象としています。<br>
+      本サイトに掲載しているリンク先のコンテンツは各運営元の責任に基づいて提供されています。
+    </p>
+
+    <div class="disclaimer">
+      <h3>【免責事項】</h3>
+      <p>当サイトは外部サイトの公開コンテンツを紹介するものです。</p>
+      <h3>【法令遵守】</h3>
+      <p>有料コンテンツの違法配信は行っていません。</p>
+      <h3>【18歳未満禁止】</h3>
+      <p>18歳未満の閲覧は禁止されています。</p>
+    </div>
+  </footer>
 
 </body>
-
-<footer>
-  <p>
-    当サイトは18歳以上の方を対象としています。<br>
-    本サイトに掲載されているリンク先のコンテンツは各運営元の責任に基づいて提供されています。<br>
-    当サイトはリンク紹介のみを行っており、コンテンツ自体を保存・配信しておりません。<br>
-    閲覧は自己責任にてお願いいたします。
-  </p>
-
-  <!-- 免責事項 -->
-  <div class="disclaimer">
-    <h3>【免責事項】</h3>
-    <p>
-      当サイトは外部サイト上に存在する公開コンテンツの情報をまとめたものであり、動画や画像の内容について一切の責任を負いません。
-      各リンク先の内容については該当運営元にご確認ください。
-    </p>
-    <h3>【法令遵守について】</h3>
-    <p>
-      当サイトはわいせつ物の頒布・陳列を目的としたものではありません。合法な範囲での情報提供を目的とし、掲載内容に問題がある場合は速やかに削除・対応いたします。
-    </p>
-    <h3>【18歳未満閲覧禁止】</h3>
-    <p>
-      当サイトは成人向けコンテンツを含みます。18歳未満の方は直ちにご退場ください。
-    </p>
-  </div>
-</footer>
-
 </html>
