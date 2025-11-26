@@ -168,7 +168,7 @@ h1 {
 .close-ad {
   position: absolute;
   top: 8px;       /* 広告の左上に重ねる位置 */
-  left: 8px;
+  left: 10px;
   background: transparent;   /* 背景なし */
   border: none;              /* 枠なし */
   color: #ff4081;            /* × の色 */
