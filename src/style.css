@@ -165,14 +165,12 @@ h1 {
   border-radius: 8px;
 }
 
-/* 閉じるボタン */
-/* ポップアップ広告内の閉じるボタン（×） */
 .close-ad {
   position: absolute;
-  top: -10px;      /* ← 上に少しかぶらせる */
-  left: -10px;     /* ← 左に少しかぶらせる */
+  top: 8px;        /* ← 広告の内側に少し下げる */
+  left: 8px;       /* ← 広告の内側に少し右へ移動 */
   background: #fff;
-  color: #ff4081;  /* ピンク系で可愛く */
+  color: #ff4081;
   border: 2px solid #ff4081;
   border-radius: 50%;
   width: 28px;
@@ -187,7 +185,6 @@ h1 {
   box-shadow: 0 0 4px rgba(0,0,0,0.2);
 }
 
-/* ホバーしたら少し大きくする（おしゃれ） */
 .close-ad:hover {
   transform: scale(1.15);
   background: #ffebf2;
