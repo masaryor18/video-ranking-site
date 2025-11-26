@@ -166,17 +166,33 @@ h1 {
 }
 
 /* 閉じるボタン */
+/* ポップアップ広告内の閉じるボタン（×） */
 .close-ad {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  background: transparent;
-  color: #ff4081;
-  border: none;
-  font-size: 1.5rem;
+  top: -10px;      /* ← 上に少しかぶらせる */
+  left: -10px;     /* ← 左に少しかぶらせる */
+  background: #fff;
+  color: #ff4081;  /* ピンク系で可愛く */
+  border: 2px solid #ff4081;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  line-height: 1;
+  z-index: 9999;
+  box-shadow: 0 0 4px rgba(0,0,0,0.2);
 }
+
+/* ホバーしたら少し大きくする（おしゃれ） */
+.close-ad:hover {
+  transform: scale(1.15);
+  background: #ffebf2;
+}
+
 
 /* ===============================
    📛 年齢確認モーダル
